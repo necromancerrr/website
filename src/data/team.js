@@ -22,7 +22,7 @@ export const leaders = [
   },
   {
     name: "Mark Nakatani",
-    role: ["Co-President", "Operation Director, Tacoma Campus"],
+    role: ["Co-President"],
     details: ["Freshman, UW Pre-Science"],
     image: "/images/Mark photo.JPG",
   },
