@@ -8,7 +8,7 @@ const upcoming = [
 
 const past = [
   { title: "UW Case Hack 2022 – $10K Prize", meta: "Maple Great Room" },
-  { title: "Workshop with World Coin", meta: "Nov 25 • Dempsey Hall" },
+  { title: "Workshop with World Coin", meta: "Nov 25, 2025 • Dempsey Hall" },
   { title: "Workshop with NEAR Social" },
   { title: "LayerZero Labs Workshop" },
   { title: "EigenLayer & Ethereum Staking" },
