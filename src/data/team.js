@@ -4,7 +4,7 @@
 export const leaders = [
   {
     name: "Leon Leng",
-    role: ["President", "Operation Director, Seattle Campus"],
+    role: ["President"],
     details: [
       "PhD Student in Information System & Operation Management",
       "UW Foster School of Business",
@@ -22,7 +22,7 @@ export const leaders = [
   },
   {
     name: "Mark Nakatani",
-    role: ["Co-President"],
+    role: ["Vice President", "Operation Director, Seattle Campus"],
     details: ["Freshman, UW Pre-Science"],
     image: "/images/Mark photo.JPG",
   },
