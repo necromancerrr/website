@@ -2,12 +2,13 @@
 import { motion } from "framer-motion";
 
 const upcoming = [
-  { title: "2025–2026 Year First Workshop", meta: "Nov 25 • Room TBA" },
+  { title: "Solana Student Hackathon", meta: "December • Online" },
   { title: "Midwest Blockchain Conference", meta: "Dec 5–6 • University of Michigan" },
 ];
 
 const past = [
   { title: "UW Case Hack 2022 – $10K Prize", meta: "Maple Great Room" },
+  { title: "Workshop with World Coin", meta: "Nov 25 • Dempsey Hall" },
   { title: "Workshop with NEAR Social" },
   { title: "LayerZero Labs Workshop" },
   { title: "EigenLayer & Ethereum Staking" },
