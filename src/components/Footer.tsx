@@ -24,7 +24,7 @@ export default function Footer() {
               <Link href="#events" className="text-sm text-muted hover:text-white">Events</Link>
               <Link href="#sponsors" className="text-sm text-muted hover:text-white">Sponsors</Link>
               <Link href="#team" className="text-sm text-muted hover:text-white">Team</Link>
-              <a href="mailto:blockchn@uw.edu?subject=Apply%20to%20UW%20Blockchain" className="text-sm text-muted hover:text-white">Apply</a>
+              <a href="https://docs.google.com/forms/d/e/1FAIpQLSfxNK9CgnIwdQzpx3_ckLAjJc6RiyTZjzjYjmnLAaxzpDpYXA/viewform?usp=dialog" target="_blank" rel="noopener noreferrer" className="text-sm text-muted hover:text-white">Apply</a>
             </nav>
           </div>
 
@@ -45,7 +45,7 @@ export default function Footer() {
             <Link href="#events" className="text-sm text-muted hover:text-white">Events</Link>
             <Link href="#sponsors" className="text-sm text-muted hover:text-white">Sponsors</Link>
             <Link href="#team" className="text-sm text-muted hover:text-white">Team</Link>
-            <a href="mailto:blockchn@uw.edu?subject=Apply%20to%20UW%20Blockchain" className="text-sm text-muted hover:text-white">Apply</a>
+            <a href="https://docs.google.com/forms/d/e/1FAIpQLSfxNK9CgnIwdQzpx3_ckLAjJc6RiyTZjzjYjmnLAaxzpDpYXA/viewform?usp=dialog" target="_blank" rel="noopener noreferrer" className="text-sm text-muted hover:text-white">Apply</a>
           </nav>
         </div>
       </div>

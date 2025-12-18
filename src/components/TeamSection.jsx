@@ -69,7 +69,7 @@ export default function TeamSection({ className = "" }) {
         <Section title="Leadership" items={leaders} />
         <Section title="Faculty Advisor" items={faculty} />
         <Section title="Alumni Network" items={alumni} />
-        <p className="mt-6 text-xs text-muted">Images will display once copied into the Next.js public folder.</p>
+
       </div>
     </section>
   );

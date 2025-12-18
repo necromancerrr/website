@@ -29,27 +29,27 @@ export default function Navbar() {
       >
         {/* Brand Logo */}
         <div className="flex items-center">
-          <Image
-            src="/images/transparent logo for website copy 2.png"
-            alt="UW Blockchain Society logo"
-            width={1200}
-            height={300}
-            className="h-10 md:h-12 w-auto"
-            unoptimized
-            priority
-          />
+          <Link href="/">
+            <Image
+              src="/images/transparent logo for website copy 2.png"
+              alt="UW Blockchain Society logo"
+              width={1200}
+              height={300}
+              className="h-10 md:h-12 w-auto"
+              unoptimized
+              priority
+            />
+          </Link>
         </div>
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-10 text-white font-medium">
-          <a href="#about" className="hover:text-[rgb(183,148,244)]">About</a>
-          <a href="#focus" className="hover:text-[rgb(183,148,244)]">Focus</a>
-          <a href="#events" className="hover:text-[rgb(183,148,244)]">Events</a>
-          <a href="#sponsors" className="hover:text-[rgb(183,148,244)]">Sponsors</a>
-          <a href="#team" className="hover:text-[rgb(183,148,244)]">Team</a>
+          <Link href="https://uwfintech.org/" target="_blank" className="hover:text-[rgb(183,148,244)]">Research</Link>
+          <Link href="/engineering" className="hover:text-[rgb(183,148,244)]">Engineering</Link>
 
           <Link
-            href="#apply"
+            href="https://docs.google.com/forms/d/e/1FAIpQLSfxNK9CgnIwdQzpx3_ckLAjJc6RiyTZjzjYjmnLAaxzpDpYXA/viewform?usp=dialog"
+            target="_blank"
             className="text-white px-5 py-2 rounded-full font-semibold transition-opacity hover:opacity-95"
             style={{
               backgroundImage: "linear-gradient(117.96deg, #6f58da, #5131e7)",
@@ -93,14 +93,12 @@ export default function Navbar() {
           </svg>
         </button>
 
-        <a href="#about" onClick={() => setOpen(false)} className="hover:text-[rgb(183,148,244)] transition-colors">About</a>
-        <a href="#focus" onClick={() => setOpen(false)} className="hover:text-[rgb(183,148,244)] transition-colors">Focus</a>
-        <a href="#events" onClick={() => setOpen(false)} className="hover:text-[rgb(183,148,244)] transition-colors">Events</a>
-        <a href="#sponsors" onClick={() => setOpen(false)} className="hover:text-[rgb(183,148,244)] transition-colors">Sponsors</a>
-        <a href="#team" onClick={() => setOpen(false)} className="hover:text-[rgb(183,148,244)] transition-colors">Team</a>
+        <Link href="https://uwfintech.org/" target="_blank" onClick={() => setOpen(false)} className="hover:text-[rgb(183,148,244)] transition-colors">Research</Link>
+        <Link href="/engineering" onClick={() => setOpen(false)} className="hover:text-[rgb(183,148,244)] transition-colors">Engineering</Link>
 
         <Link
-          href="#apply"
+          href="https://docs.google.com/forms/d/e/1FAIpQLSfxNK9CgnIwdQzpx3_ckLAjJc6RiyTZjzjYjmnLAaxzpDpYXA/viewform?usp=dialog"
+          target="_blank"
           onClick={() => setOpen(false)}
           className="text-white px-6 py-3 rounded-full mt-6 text-xl font-semibold transition-opacity hover:opacity-95"
           style={{
