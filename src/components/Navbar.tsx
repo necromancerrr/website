@@ -46,6 +46,7 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-10 text-white font-medium">
           <Link href="https://uwfintech.org/" target="_blank" className="hover:text-[rgb(183,148,244)]">Research</Link>
           <Link href="/engineering" className="hover:text-[rgb(183,148,244)]">Engineering</Link>
+          <Link href="/career-portal">Career Portal</Link>
 
           <Link
             href="https://docs.google.com/forms/d/e/1FAIpQLSfxNK9CgnIwdQzpx3_ckLAjJc6RiyTZjzjYjmnLAaxzpDpYXA/viewform?usp=dialog"
