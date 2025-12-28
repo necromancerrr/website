@@ -99,7 +99,7 @@ export default function ManageMembersPage() {
     setSuccess(null);
 
     try {
-      // Check if email already exists
+      // Check if email already exists in members table
       const { data: existingMember } = await supabase
         .from('members')
         .select('id')
@@ -112,7 +112,28 @@ export default function ManageMembersPage() {
         return;
       }
 
-      // Add new member
+      // Create user in auth system via API
+      const authResponse = await fetch('/api/admin/create-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: firstName,
+          lastName: lastName,
+          email: memberEmail,
+        }),
+      });
+
+      const authData = await authResponse.json();
+
+      if (!authResponse.ok) {
+        setError(authData.error || 'Failed to create user in auth system');
+        setLoading(false);
+        return;
+      }
+
+      // Add new member to database (keep existing logic)
       const { data, error } = await supabase
         .from('members')
         .insert([
@@ -129,7 +150,7 @@ export default function ManageMembersPage() {
       if (error) {
         setError(error.message);
       } else {
-        setSuccess(`Successfully added ${firstName} ${lastName} to the career portal`);
+        setSuccess(`Successfully added ${firstName} ${lastName} to the career portal. A password reset email has been sent to ${memberEmail}.`);
         // Reset form
         setFirstName("");
         setLastName("");
