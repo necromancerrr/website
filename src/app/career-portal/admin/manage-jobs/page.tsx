@@ -5,7 +5,7 @@ import Link from "next/link";
 import { supabase } from "@/api/supabase";
 import type { Session } from "@supabase/supabase-js";
 
-export default function CareerPortalAdminPage() {
+export default function ManageJobsPage() {
   const [user, setUser] = useState<any>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [email, setEmail] = useState("");
@@ -13,42 +13,48 @@ export default function CareerPortalAdminPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const applications = [
+  // Sample job postings data - replace with actual data fetching
+  const jobPostings = [
     {
       id: 1,
-      name: "Alex Chen",
-      email: "alex.chen@uw.edu",
-      position: "Blockchain Developer Intern",
-      status: "pending",
-      applied: "2024-12-20",
-      experience: "Solidity, React, TypeScript"
+      title: "Blockchain Developer Intern",
+      company: "CryptoStart Inc.",
+      location: "Remote",
+      type: "Internship",
+      posted: "2024-12-20",
+      deadline: "2025-01-15",
+      status: "active",
+      applicants: 12
     },
     {
       id: 2,
-      name: "Sarah Johnson",
-      email: "sarah.j@uw.edu", 
-      position: "DeFi Research Analyst",
-      status: "reviewing",
-      applied: "2024-12-19",
-      experience: "DeFi protocols, Data analysis"
+      title: "DeFi Product Manager",
+      company: "DeFi Labs",
+      location: "Hybrid",
+      type: "Full Time",
+      posted: "2024-12-18",
+      deadline: "2025-01-30",
+      status: "active",
+      applicants: 8
     },
     {
       id: 3,
-      name: "Mike Wilson",
-      email: "mike.w@uw.edu",
-      position: "Smart Contract Auditor",
-      status: "approved",
-      applied: "2024-12-18",
-      experience: "Security auditing, Solidity"
+      title: "Smart Contract Security Engineer",
+      company: "SecureChain",
+      location: "On Site",
+      type: "Full Time",
+      posted: "2024-12-15",
+      deadline: "2025-01-20",
+      status: "draft",
+      applicants: 0
     }
   ];
 
   const stats = {
-    total: 47,
-    pending: 12,
-    reviewing: 8,
-    approved: 15,
-    rejected: 12
+    total: 24,
+    active: 18,
+    draft: 6,
+    expired: 3
   };
 
   // Check for existing session on mount
@@ -131,21 +137,28 @@ export default function CareerPortalAdminPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "pending": return "text-yellow-400";
-      case "reviewing": return "text-blue-400";
-      case "approved": return "text-green-400";
-      case "rejected": return "text-red-400";
+      case "active": return "text-green-400";
+      case "draft": return "text-yellow-400";
+      case "expired": return "text-red-400";
       default: return "text-muted";
     }
   };
 
   const getStatusBg = (status: string) => {
     switch (status) {
-      case "pending": return "bg-yellow-400/10 border-yellow-400/20";
-      case "reviewing": return "bg-blue-400/10 border-blue-400/20";
-      case "approved": return "bg-green-400/10 border-green-400/20";
-      case "rejected": return "bg-red-400/10 border-red-400/20";
+      case "active": return "bg-green-400/10 border-green-400/20";
+      case "draft": return "bg-yellow-400/10 border-yellow-400/20";
+      case "expired": return "bg-red-400/10 border-red-400/20";
       default: return "bg-white/5 border-white/10";
+    }
+  };
+
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case "Internship": return "text-blue-400";
+      case "Full Time": return "text-green-400";
+      case "Contract": return "text-purple-400";
+      default: return "text-muted";
     }
   };
 
@@ -153,7 +166,6 @@ export default function CareerPortalAdminPage() {
   if (!user) {
     return (
       <div className="min-h-screen pt-28 lg:pt-24">
-        {/* Atmospheric background matching homepage */}
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute inset-x-0 -top-24 h-64 bg-radial-fade" />
         </div>
@@ -168,11 +180,11 @@ export default function CareerPortalAdminPage() {
             <div className="w-full max-w-md">
               <div className="text-center mb-8">
                 <h1 className="font-heading text-4xl sm:text-5xl text-white leading-tight mb-4">
-                  Admin Portal
+                  Manage Jobs
                   <span className="block text-electric">Sign In</span>
                 </h1>
                 <p className="text-muted text-lg">
-                  Access the career portal administration dashboard.
+                  Access job posting management dashboard.
                 </p>
               </div>
 
@@ -214,7 +226,7 @@ export default function CareerPortalAdminPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
-                      placeholder="••••••••"
+                      placeholder="•••••••"
                       required
                     />
                   </div>
@@ -228,7 +240,7 @@ export default function CareerPortalAdminPage() {
                       boxShadow: "0 8px 24px rgba(111, 88, 218, 0.45)",
                     }}
                   >
-                    {loading ? "Signing In..." : "Access Admin Career Portal"}
+                    {loading ? "Signing In..." : "Access Job Management"}
                   </button>
                 </form>
               </motion.div>
@@ -239,10 +251,9 @@ export default function CareerPortalAdminPage() {
     );
   }
 
-  // Show admin dashboard if authenticated
+  // Show manage jobs dashboard if authenticated
   return (
     <div className="min-h-screen pt-28 lg:pt-24">
-      {/* Atmospheric background */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-x-0 -top-24 h-64 bg-radial-fade" />
       </div>
@@ -257,11 +268,11 @@ export default function CareerPortalAdminPage() {
           <div className="mb-8 flex items-center justify-between">
             <div>
               <h1 className="font-heading text-4xl sm:text-5xl text-white leading-tight mb-4">
-                Career Portal
-                <span className="block text-electric">Admin Dashboard</span>
+                Job Management
+                <span className="block text-electric">Manage Postings</span>
               </h1>
               <p className="text-muted text-lg">
-                Manage applications and track career opportunities.
+                Create, edit, and manage job postings for the UW Blockchain community.
               </p>
               {user?.email && (
                 <p className="text-electric text-sm mt-2">
@@ -271,24 +282,14 @@ export default function CareerPortalAdminPage() {
             </div>
             <div className="flex gap-2">
               <Link
-                href="/career-portal/admin/manage-members"
+                href="/career-portal/admin"
                 className="px-4 py-2 rounded-lg text-white text-sm transition-opacity hover:opacity-95"
                 style={{
                   backgroundImage: "linear-gradient(117.96deg, #6f58da, #5131e7)",
                   boxShadow: "0 4px 12px rgba(111, 88, 218, 0.35)",
                 }}
               >
-                Manage Members
-              </Link>
-              <Link
-                href="/career-portal/admin/manage-jobs"
-                className="px-4 py-2 rounded-lg text-white text-sm transition-opacity hover:opacity-95"
-                style={{
-                  backgroundImage: "linear-gradient(117.96deg, #6f58da, #5131e7)",
-                  boxShadow: "0 4px 12px rgba(111, 88, 218, 0.35)",
-                }}
-              >
-                Manage Job Postings
+                Back to Admin
               </Link>
               <button
                 onClick={handleSignOut}
@@ -304,7 +305,7 @@ export default function CareerPortalAdminPage() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
-            className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8"
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
           >
             {Object.entries(stats).map(([key, value]) => (
               <div
@@ -317,26 +318,51 @@ export default function CareerPortalAdminPage() {
             ))}
           </motion.div>
 
-          {/* Applications Table */}
+          {/* Quick Actions */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+            className="mb-8"
+          >
+            <div className="flex gap-4">
+              <button className="rounded-full text-white px-6 py-3 font-semibold transition-opacity hover:opacity-95"
+                style={{
+                  backgroundImage: "linear-gradient(117.96deg, #6f58da, #5131e7)",
+                  boxShadow: "0 8px 24px rgba(111, 88, 218, 0.45)",
+                }}>
+                Create New Job Posting
+              </button>
+              <button className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-colors text-sm">
+                Import Jobs
+              </button>
+              <button className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-colors text-sm">
+                Export Jobs
+              </button>
+            </div>
+          </motion.div>
+
+          {/* Job Postings Table */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
             className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-6 accent-glow"
           >
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-white">Recent Applications</h2>
+              <h2 className="text-xl font-semibold text-white">Job Postings</h2>
               <div className="flex gap-2">
-                <button className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-colors text-sm">
-                  Export CSV
-                </button>
-                <button className="px-4 py-2 rounded-lg text-white text-sm transition-opacity hover:opacity-95"
-                  style={{
-                    backgroundImage: "linear-gradient(117.96deg, #6f58da, #5131e7)",
-                    boxShadow: "0 4px 12px rgba(111, 88, 218, 0.35)",
-                  }}>
-                  Add Position
-                </button>
+                <input
+                  type="text"
+                  placeholder="Search jobs..."
+                  className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors text-sm"
+                />
+                <select className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors text-sm">
+                  <option value="">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="draft">Draft</option>
+                  <option value="expired">Expired</option>
+                </select>
               </div>
             </div>
 
@@ -344,29 +370,38 @@ export default function CareerPortalAdminPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/10">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted">Applicant</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted">Position</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted">Experience</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted">Applied</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted">Job Title</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted">Company</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted">Location</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted">Type</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted">Posted</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted">Deadline</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted">Applicants</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted">Status</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {applications.map((app) => (
-                    <tr key={app.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                  {jobPostings.map((job) => (
+                    <tr key={job.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                       <td className="py-4 px-4">
                         <div>
-                          <div className="text-white font-medium">{app.name}</div>
-                          <div className="text-muted text-sm">{app.email}</div>
+                          <div className="text-white font-medium">{job.title}</div>
                         </div>
                       </td>
-                      <td className="py-4 px-4 text-white">{app.position}</td>
-                      <td className="py-4 px-4 text-muted text-sm">{app.experience}</td>
-                      <td className="py-4 px-4 text-muted text-sm">{app.applied}</td>
+                      <td className="py-4 px-4 text-white">{job.company}</td>
+                      <td className="py-4 px-4 text-muted text-sm">{job.location}</td>
                       <td className="py-4 px-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusBg(app.status)} ${getStatusColor(app.status)}`}>
-                          {app.status}
+                        <span className={`text-sm font-medium ${getTypeColor(job.type)}`}>
+                          {job.type}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4 text-muted text-sm">{job.posted}</td>
+                      <td className="py-4 px-4 text-muted text-sm">{job.deadline}</td>
+                      <td className="py-4 px-4 text-white">{job.applicants}</td>
+                      <td className="py-4 px-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusBg(job.status)} ${getStatusColor(job.status)}`}>
+                          {job.status}
                         </span>
                       </td>
                       <td className="py-4 px-4">
@@ -377,6 +412,9 @@ export default function CareerPortalAdminPage() {
                           <button className="text-muted hover:text-white text-sm transition-colors">
                             Edit
                           </button>
+                          <button className="text-red-400 hover:text-red-300 text-sm transition-colors">
+                            Delete
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -384,63 +422,98 @@ export default function CareerPortalAdminPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Empty State */}
+            {jobPostings.length === 0 && (
+              <div className="text-center py-12">
+                <h3 className="text-xl font-semibold text-white mb-4">No Job Postings Yet</h3>
+                <p className="text-muted text-lg mb-8">
+                  Create your first job posting to get started.
+                </p>
+                <button className="rounded-full text-white px-6 py-3 font-semibold transition-opacity hover:opacity-95"
+                  style={{
+                    backgroundImage: "linear-gradient(117.96deg, #6f58da, #5131e7)",
+                    boxShadow: "0 8px 24px rgba(111, 88, 218, 0.45)",
+                  }}>
+                  Create First Job Posting
+                </button>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {jobPostings.length > 0 && (
+              <div className="flex justify-center mt-6 gap-2">
+                <button className="px-3 py-1 bg-white/5 border border-white/10 rounded text-white hover:bg-white/10 transition-colors text-sm">
+                  Previous
+                </button>
+                <button className="px-3 py-1 bg-electric text-white rounded text-sm">
+                  1
+                </button>
+                <button className="px-3 py-1 bg-white/5 border border-white/10 rounded text-white hover:bg-white/10 transition-colors text-sm">
+                  2
+                </button>
+                <button className="px-3 py-1 bg-white/5 border border-white/10 rounded text-white hover:bg-white/10 transition-colors text-sm">
+                  Next
+                </button>
+              </div>
+            )}
           </motion.div>
 
-          {/* Quick Actions */}
+          {/* Quick Stats Section */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
             className="grid md:grid-cols-3 gap-6 mt-8"
           >
-            <div className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-xl p-6 accent-glow">
-              <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
-              <div className="space-y-3">
-                <button className="w-full text-left px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-colors text-sm">
-                  Review Pending Applications
-                </button>
-                <button className="w-full text-left px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-colors text-sm">
-                  Send Email Notifications
-                </button>
-                <button className="w-full text-left px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-colors text-sm">
-                  Generate Reports
-                </button>
-              </div>
-            </div>
-
             <div className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-xl p-6 accent-glow">
               <h3 className="text-lg font-semibold text-white mb-4">Recent Activity</h3>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted">New application received</span>
-                  <span className="text-muted">2m ago</span>
+                  <span className="text-muted">New job posted</span>
+                  <span className="text-muted">2h ago</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted">Status updated</span>
-                  <span className="text-muted">15m ago</span>
+                  <span className="text-muted">Job updated</span>
+                  <span className="text-muted">5h ago</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted">Email sent</span>
-                  <span className="text-muted">1h ago</span>
+                  <span className="text-muted">Application received</span>
+                  <span className="text-muted">1d ago</span>
                 </div>
               </div>
             </div>
 
             <div className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-xl p-6 accent-glow">
-              <h3 className="text-lg font-semibold text-white mb-4">System Status</h3>
+              <h3 className="text-lg font-semibold text-white mb-4">Top Companies</h3>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted">Database</span>
-                  <span className="text-green-400">Operational</span>
+                  <span className="text-white">CryptoStart Inc.</span>
+                  <span className="text-muted">3 postings</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted">Email service</span>
-                  <span className="text-green-400">Operational</span>
+                  <span className="text-white">DeFi Labs</span>
+                  <span className="text-muted">2 postings</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted">API</span>
-                  <span className="text-green-400">Operational</span>
+                  <span className="text-white">SecureChain</span>
+                  <span className="text-muted">1 posting</span>
                 </div>
+              </div>
+            </div>
+
+            <div className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-xl p-6 accent-glow">
+              <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
+              <div className="space-y-3">
+                <button className="w-full text-left px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-colors text-sm">
+                  Review All Applications
+                </button>
+                <button className="w-full text-left px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-colors text-sm">
+                  Send Email Digest
+                </button>
+                <button className="w-full text-left px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-colors text-sm">
+                  Generate Analytics Report
+                </button>
               </div>
             </div>
           </motion.div>
