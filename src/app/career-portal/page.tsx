@@ -14,8 +14,7 @@ export default function CareerPortalPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Tab management
-  const [activeTab, setActiveTab] = useState("profile");
+
   
   // Profile state
   const [profile, setProfile] = useState({
@@ -501,11 +500,7 @@ export default function CareerPortalPage() {
     </div>
   );
 
-  const renderJobPostingsTab = () => (
-    <div className="text-center py-12">
-      <p className="text-muted text-lg">Job Postings coming soon...</p>
-    </div>
-  );
+
 
   // Render job portal dashboard
   return (
@@ -525,7 +520,7 @@ export default function CareerPortalPage() {
             <div className="text-center">
               <h1 className="font-heading text-4xl sm:text-5xl text-white leading-tight mb-4">
                 Career Portal
-                <span className="block text-electric">Dashboard</span>
+                <span className="block text-electric">Profile</span>
               </h1>
               <p className="text-muted text-lg">
                 Welcome back, {session?.user.email?.split('@')[0]}
@@ -543,37 +538,27 @@ export default function CareerPortalPage() {
           <div className="mb-8">
             <div className="flex space-x-1 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-1">
               <button
-                onClick={() => setActiveTab("profile")}
-                className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  activeTab === "profile"
-                    ? "bg-electric text-white shadow-lg"
-                    : "text-muted hover:text-white"
-                }`}
+                className="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all bg-electric text-white shadow-lg"
               >
                 Profile
               </button>
               <button
-                onClick={() => setActiveTab("jobs")}
-                className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  activeTab === "jobs"
-                    ? "bg-electric text-white shadow-lg"
-                    : "text-muted hover:text-white"
-                }`}
+                onClick={() => router.push("/career-portal/jobs")}
+                className="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all text-muted hover:bg-electric hover:text-white"
               >
                 Job Postings
               </button>
             </div>
           </div>
 
-          {/* Tab Content */}
+          {/* Profile Content */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
             className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-8 accent-glow"
           >
-            {activeTab === "profile" && renderProfileTab()}
-            {activeTab === "jobs" && renderJobPostingsTab()}
+            {renderProfileTab()}
           </motion.div>
         </motion.div>
       </div>
