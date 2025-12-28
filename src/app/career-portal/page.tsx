@@ -47,9 +47,95 @@ export default function CareerPortalPage() {
     venture: false,
   });
 
-  const [resumeFile, setResumeFile] = useState<File | null>(null);
+
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+
+  // Load existing profile data
+  const loadProfile = async (userEmail: string) => {
+    try {
+      const response = await fetch(`/api/profile?email=${encodeURIComponent(userEmail)}`);
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error('Error loading profile:', result.error);
+        return;
+      }
+
+      const profileData = result.data;
+
+      if (profileData) {
+        // Load basic profile data
+        setProfile({
+          firstName: "",
+          lastName: "",
+          graduationDate: profileData.expected_graduation ? `${profileData.expected_graduation}-01` : "",
+          academicProgram: profileData.degree || "",
+          linkedinUrl: profileData.social_linkedin || "",
+          githubUrl: profileData.social_github || "",
+          jobSearchStatus: "open",
+          notes: profileData.notes || "",
+        });
+
+        // Load career interests
+        if (profileData.career_interests && Array.isArray(profileData.career_interests)) {
+          const interests = profileData.career_interests as string[];
+          const updatedInterests = { ...careerInterests };
+          
+          // Reset all interests first
+          Object.keys(updatedInterests).forEach(key => {
+            if (key === 'engineering') {
+              Object.keys(updatedInterests.engineering).forEach(engKey => {
+                updatedInterests.engineering[engKey as keyof typeof updatedInterests.engineering] = false;
+              });
+            } else {
+              updatedInterests[key as keyof Omit<typeof updatedInterests, 'engineering'>] = false;
+            }
+          });
+
+          // Set selected interests
+          interests.forEach(interest => {
+            const interestKey = interest.toLowerCase().replace(/\s+/g, '');
+            
+            // Check engineering interests
+            if (interestKey.includes('software') || interestKey.includes('engineering')) {
+              updatedInterests.engineering.softwareEngineering = true;
+            } else if (interestKey.includes('blockchain') || interestKey.includes('dev')) {
+              updatedInterests.engineering.blockchainDevelopment = true;
+            } else if (interestKey.includes('devops')) {
+              updatedInterests.engineering.devOpsEngineering = true;
+            }
+            // Check other interests
+            else if (interestKey.includes('finance')) {
+              updatedInterests.finance = true;
+            } else if (interestKey.includes('product') || interestKey.includes('management')) {
+              updatedInterests.productManagement = true;
+            } else if (interestKey.includes('data') || interestKey.includes('science')) {
+              updatedInterests.dataScience = true;
+            } else if (interestKey.includes('design') || interestKey.includes('ux')) {
+              updatedInterests.uiUxDesign = true;
+            } else if (interestKey.includes('business') || interestKey.includes('development')) {
+              updatedInterests.businessDevelopment = true;
+            } else if (interestKey.includes('research') || interestKey.includes('academia')) {
+              updatedInterests.researchAcademia = true;
+            } else if (interestKey.includes('marketing')) {
+              updatedInterests.marketing = true;
+            } else if (interestKey.includes('legal')) {
+              updatedInterests.legal = true;
+            } else if (interestKey.includes('security')) {
+              updatedInterests.security = true;
+            } else if (interestKey.includes('venture')) {
+              updatedInterests.venture = true;
+            }
+          });
+          
+          setCareerInterests(updatedInterests);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    }
+  };
 
   useEffect(() => {
     const getSession = async () => {
@@ -59,6 +145,10 @@ export default function CareerPortalPage() {
 
       setSession(session);
       setUser(session?.user ?? null);
+      
+      if (session?.user.email) {
+        await loadProfile(session.user.email);
+      }
     };
 
     getSession();
@@ -73,12 +163,50 @@ export default function CareerPortalPage() {
         setEmail("");
         setPassword("");
         setError(null);
+        // Reset profile data
+        setProfile({
+          firstName: "",
+          lastName: "",
+          graduationDate: "",
+          academicProgram: "",
+          linkedinUrl: "",
+          githubUrl: "",
+          jobSearchStatus: "open",
+          notes: "",
+        });
+        setCareerInterests({
+          engineering: {
+            softwareEngineering: false,
+            blockchainDevelopment: false,
+            devOpsEngineering: false,
+          },
+          finance: false,
+          productManagement: false,
+          dataScience: false,
+          uiUxDesign: false,
+          businessDevelopment: false,
+          researchAcademia: false,
+          marketing: false,
+          legal: false,
+          security: false,
+          venture: false,
+        });
       } else if (event === "SIGNED_IN") {
         setError(null);
+        if (session?.user.email) {
+          await loadProfile(session.user.email);
+        }
       }
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  // Load profile data when user changes
+  useEffect(() => {
+    if (user?.email) {
+      loadProfile(user.email);
+    }
+  }, [user?.email]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -251,31 +379,68 @@ export default function CareerPortalPage() {
     setSaveMessage(null);
     
     try {
-      // Simulate API call - replace with actual API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Prepare career interests data for JSON field
+      const selectedInterests: string[] = [];
+      
+      // Check engineering interests
+      Object.entries(careerInterests.engineering).forEach(([key, value]) => {
+        if (value) {
+          selectedInterests.push(key.replace(/([A-Z])/g, ' $1').trim());
+        }
+      });
+      
+      // Check other interests
+      Object.entries(careerInterests).forEach(([key, value]) => {
+        if (key !== 'engineering' && value) {
+          selectedInterests.push(key.replace(/([A-Z])/g, ' $1').trim());
+        }
+      });
+
+      const profileData = {
+        email: session?.user.email,
+        expected_graduation: profile.graduationDate ? new Date(profile.graduationDate).getFullYear() : null,
+        degree: profile.academicProgram,
+        career_interests: selectedInterests,
+        social_linkedin: profile.linkedinUrl,
+        social_github: profile.githubUrl,
+        notes: profile.notes,
+      };
+
+      // Call API endpoint
+      const response = await fetch('/api/profile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(profileData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to save profile');
+      }
+
       setSaveMessage("Profile saved successfully!");
     } catch (error) {
-      setSaveMessage("Error saving profile");
+      console.error('Error saving profile:', error);
+      setSaveMessage("Error saving profile. Please try again.");
     } finally {
       setIsSaving(false);
       setTimeout(() => setSaveMessage(null), 3000);
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && file.type === "application/pdf") {
-      setResumeFile(file);
-    } else {
-      alert("Please upload a PDF file");
-    }
-  };
+
 
   const renderProfileTab = () => (
     <div className="space-y-8">
       {/* Personal Information */}
       <div>
         <h3 className="text-xl font-semibold text-white mb-4">Personal Information</h3>
+        <label className="block text-sm text-white mb-4">
+          Filling this is optional. We will use these data to understand our club demography better.
+        </label>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-white mb-2">
@@ -291,30 +456,6 @@ export default function CareerPortalPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-white mb-2">
-              First Name
-            </label>
-            <input
-              type="text"
-              value={profile.firstName}
-              onChange={(e) => setProfile({ ...profile, firstName: e.target.value })}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
-              placeholder="First name"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">
-              Last Name
-            </label>
-            <input
-              type="text"
-              value={profile.lastName}
-              onChange={(e) => setProfile({ ...profile, lastName: e.target.value })}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
-              placeholder="Last name"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">
               Expected Graduation
             </label>
             <input
@@ -326,7 +467,7 @@ export default function CareerPortalPage() {
           </div>
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-white mb-2">
-              Academic Program
+              Degree
             </label>
             <input
               type="text"
@@ -396,28 +537,7 @@ export default function CareerPortalPage() {
         </div>
       </div>
 
-      {/* Resume Upload */}
-      <div>
-        <h3 className="text-xl font-semibold text-white mb-4">Resume</h3>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">
-              Upload Resume (PDF)
-            </label>
-            <input
-              type="file"
-              accept=".pdf"
-              onChange={handleFileUpload}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-electric file:text-white hover:file:bg-electric-alt transition-colors"
-            />
-            {resumeFile && (
-              <p className="mt-2 text-sm text-muted">
-                Selected: {resumeFile.name} ({(resumeFile.size / 1024 / 1024).toFixed(2)} MB)
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
+
 
       {/* Additional Information */}
       <div>
@@ -446,20 +566,6 @@ export default function CareerPortalPage() {
               className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
               placeholder="https://github.com/yourusername"
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">
-              Job Search Status
-            </label>
-            <select
-              value={profile.jobSearchStatus}
-              onChange={(e) => setProfile({ ...profile, jobSearchStatus: e.target.value })}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
-            >
-              <option value="actively-looking">Actively Looking</option>
-              <option value="open">Open to Opportunities</option>
-              <option value="not-looking">Not Looking</option>
-            </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-white mb-2">
