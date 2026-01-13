@@ -18,7 +18,7 @@ export const leaders = [
       "BBA Student in Business Administration",
       "UW Bothell School of Business",
     ],
-    image: "/images/yasmine.jpg",
+    image: "/images/noprofile.png",
   },
   {
     name: "Mark Nakatani",

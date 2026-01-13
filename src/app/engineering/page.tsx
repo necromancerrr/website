@@ -23,7 +23,7 @@ export default function EngineeringPage() {
                     </h1>
 
                     <p className="text-xl md:text-2xl text-muted max-w-2xl mx-auto">
-                        The Engineering Branch of UW Blockchain. We don't just speculate; we ship real projects.
+                        The Engineering Branch of UW Blockchain. We don&apos;t just speculate; we ship real projects.
                     </p>
 
                     <div className="pt-4">
@@ -69,7 +69,7 @@ export default function EngineeringPage() {
                             {/* Abstract Code Visual */}
                             <div className="font-mono text-sm text-muted/50 w-full">
                                 <div className="mb-2"><span className="text-electric">const</span> <span className="text-white">buildFuture</span> = <span className="text-electric">async</span> () ={'>'} {'{'}</div>
-                                <div className="pl-4 mb-2"><span className="text-electric">await</span> deploy(<span className="text-green-400">'Mainnet'</span>);</div>
+                                <div className="pl-4 mb-2"><span className="text-electric">await</span> deploy(<span className="text-green-400">&apos;Mainnet&apos;</span>);</div>
                                 <div className="pl-4 mb-2"><span className="text-electric">return</span> <span className="text-white">impact</span>;</div>
                                 <div>{'}'}</div>
                             </div>

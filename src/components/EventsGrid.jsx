@@ -2,8 +2,8 @@
 import { motion } from "framer-motion";
 
 const upcoming = [
-  { title: "Solana Student Hackathon", meta: "December • Online" },
-  { title: "Midwest Blockchain Conference", meta: "Dec 5–6 • University of Michigan" },
+  { title: "Solana Privacy Hackathon", meta: "Jan 12 - Feb 1 • Online" },
+  { title: "ETH Denver", meta: "Feb 17–21 • Denver" },
 ];
 
 const past = [

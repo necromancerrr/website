@@ -66,10 +66,28 @@ export default function TeamSection({ className = "" }) {
           <h2 className="text-white font-heading text-3xl">Meet Our Team</h2>
           <p className="mt-3 text-muted">Students and advisors pushing blockchain forward at UW.</p>
         </div>
+        <section className="mt-10">
+          <h3 className="text-white font-heading text-2xl mb-4">Contact</h3>
+          <div className="rounded-2xl border border-white/10 bg-black/60 p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div className="max-w-2xl">
+              <p className="text-white font-heading text-xl">Do you have a question?</p>
+              <p className="mt-2 text-muted text-sm leading-relaxed">
+                Want to partner, sponsor, or collaborate with UW Blockchain? Send us an email and we’ll get back to you.
+              </p>
+            </div>
+            <a
+              href="mailto:blockchn@uw.edu"
+              className="inline-flex items-center justify-center rounded-full px-6 py-3 font-semibold text-white border border-electric/40 bg-electric/10 hover:bg-electric/20 hover:border-electric transition-colors"
+              aria-label="Email UW Blockchain at blockchn@uw.edu"
+            >
+              Contact us
+            </a>
+          </div>
+        </section>
+
         <Section title="Leadership" items={leaders} />
         <Section title="Faculty Advisor" items={faculty} />
         <Section title="Alumni Network" items={alumni} />
-
       </div>
     </section>
   );
