@@ -77,11 +77,11 @@ function UpdatePasswordContent() {
       if (error) {
         setError(error.message);
       } else {
-        setSuccess('Password updated successfully! Redirecting to career portal...');
+        setSuccess('Password updated successfully! Redirecting to sign-in page...');
         
-        // Redirect to career portal after 2 seconds
+        // Redirect to sign-in page after 2 seconds
         setTimeout(() => {
-          router.push('/career-portal');
+          router.push('/sign-in');
         }, 2000);
       }
     } catch (err) {
