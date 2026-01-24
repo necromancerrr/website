@@ -3,10 +3,12 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/api/supabase";
+import { usePrivy } from "@privy-io/react-auth";
 import type { Session } from "@supabase/supabase-js";
 
 export default function JobsPage() {
   const router = useRouter();
+  const { ready, authenticated } = usePrivy();
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<any>(null);
   const [numOfJobs, setNumOfJobs] = useState(0)
@@ -24,7 +26,10 @@ export default function JobsPage() {
     getSession();
   }, []);
 
-  if (!user) {
+  // Check if user is authenticated via either Supabase or Privy
+  const isAuthenticated = user || (ready && authenticated);
+
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen pt-28 lg:pt-24">
         <div className="pointer-events-none absolute inset-0">

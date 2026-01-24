@@ -4,9 +4,11 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/api/supabase";
+import { usePrivy } from "@privy-io/react-auth";
 
 export default function CareerPortalPage() {
   const router = useRouter();
+  const { ready, authenticated, user: privyUser, login: privyLogin, logout: privyLogout } = usePrivy();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [session, setSession] = useState<Session | null>(null);
@@ -15,7 +17,7 @@ export default function CareerPortalPage() {
   const [error, setError] = useState<string | null>(null);
 
 
-  
+
   // Profile state
   const [profile, setProfile] = useState({
     firstName: "",
@@ -81,7 +83,7 @@ export default function CareerPortalPage() {
         if (profileData.career_interests && Array.isArray(profileData.career_interests)) {
           const interests = profileData.career_interests as string[];
           const updatedInterests = { ...careerInterests };
-          
+
           // Reset all interests first
           Object.keys(updatedInterests).forEach(key => {
             if (key === 'engineering') {
@@ -96,7 +98,7 @@ export default function CareerPortalPage() {
           // Set selected interests
           interests.forEach(interest => {
             const interestKey = interest.toLowerCase().replace(/\s+/g, '');
-            
+
             // Check engineering interests
             if (interestKey.includes('software') || interestKey.includes('engineering')) {
               updatedInterests.engineering.softwareEngineering = true;
@@ -128,7 +130,7 @@ export default function CareerPortalPage() {
               updatedInterests.venture = true;
             }
           });
-          
+
           setCareerInterests(updatedInterests);
         }
       }
@@ -145,7 +147,7 @@ export default function CareerPortalPage() {
 
       setSession(session);
       setUser(session?.user ?? null);
-      
+
       if (session?.user.email) {
         await loadProfile(session.user.email);
       }
@@ -158,7 +160,7 @@ export default function CareerPortalPage() {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
-      
+
       if (event === "SIGNED_OUT") {
         setEmail("");
         setPassword("");
@@ -201,12 +203,23 @@ export default function CareerPortalPage() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Load profile data when user changes
+  // Load profile data when user changes (Supabase)
   useEffect(() => {
     if (user?.email) {
       loadProfile(user.email);
     }
   }, [user?.email]);
+
+  // Load profile data when Privy user authenticates
+  useEffect(() => {
+    if (ready && authenticated && privyUser) {
+      // Get identifier from Privy user (wallet address or email)
+      const identifier = privyUser.wallet?.address || privyUser.email?.address;
+      if (identifier) {
+        loadProfile(identifier);
+      }
+    }
+  }, [ready, authenticated, privyUser]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -241,13 +254,28 @@ export default function CareerPortalPage() {
 
   const handleSignOut = async () => {
     try {
+      // Sign out from both Supabase and Privy
       await supabase.auth.signOut();
+      if (authenticated) {
+        await privyLogout();
+      }
     } catch (err) {
       console.error("Error signing out: ", err);
     }
   };
 
-  if (!user) {
+  // Get user identifier (email from Supabase or wallet address from Privy)
+  const getUserIdentifier = () => {
+    if (user?.email) return user.email;
+    if (privyUser?.wallet?.address) return privyUser.wallet.address;
+    if (privyUser?.email?.address) return privyUser.email.address;
+    return null;
+  };
+
+  // Check if user is authenticated via either method
+  const isAuthenticated = user || (ready && authenticated);
+
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen pt-28 lg:pt-24">
         <div className="pointer-events-none absolute inset-0">
@@ -273,100 +301,121 @@ export default function CareerPortalPage() {
                 </p>
               </div>
 
-               <motion.div
-                 initial={{ opacity: 0, y: 8 }}
-                 animate={{ opacity: 1, y: 0 }}
-                 transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-                 className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-8 accent-glow"
-               >
-                 <form onSubmit={handleSignIn} className="space-y-6">
-                   {error && (
-                     <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-                       {error}
-                     </div>
-                   )}
-                   
-                   <div>
-                     <label
-                       htmlFor="email"
-                       className="block text-sm font-medium text-white mb-2"
-                     >
-                       Email
-                     </label>
-                     <input
-                       id="email"
-                       type="email"
-                       value={email}
-                       onChange={(e) => setEmail(e.target.value)}
-                       className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
-                       placeholder="your.email@uw.edu"
-                       required
-                     />
-                   </div>
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+                className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-8 accent-glow"
+              >
+                <form onSubmit={handleSignIn} className="space-y-6">
+                  {error && (
+                    <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                      {error}
+                    </div>
+                  )}
 
-                   <div>
-                     <label
-                       htmlFor="password"
-                       className="block text-sm font-medium text-white mb-2"
-                     >
-                       Password
-                     </label>
-                     <input
-                       id="password"
-                       type="password"
-                       value={password}
-                       onChange={(e) => setPassword(e.target.value)}
-                       className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
-                       placeholder="••••••••"
-                       required
-                     />
-                   </div>
+                  <div>
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-medium text-white mb-2"
+                    >
+                      Email
+                    </label>
+                    <input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
+                      placeholder="your.email@uw.edu"
+                      required
+                    />
+                  </div>
 
-                   <div className="flex items-center justify-between">
-                     <label className="flex items-center">
-                       <input
-                         type="checkbox"
-                         className="w-4 h-4 bg-white/5 border border-white/10 rounded focus:ring-electric focus:border-electric"
-                       />
-                       <span className="ml-2 text-sm text-muted">
-                         Remember me
-                       </span>
-                     </label>
-                     <button
-                       type="button"
-                       onClick={() => router.push("/reset-password")}
-                       className="text-sm text-electric hover:text-electric-alt transition-colors"
-                     >
-                       Forgot password?
-                     </button>
-                   </div>
+                  <div>
+                    <label
+                      htmlFor="password"
+                      className="block text-sm font-medium text-white mb-2"
+                    >
+                      Password
+                    </label>
+                    <input
+                      id="password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
+                      placeholder="••••••••"
+                      required
+                    />
+                  </div>
 
-                   <button
-                     type="submit"
-                     disabled={loading}
-                     className="w-full rounded-full text-white px-6 py-3 font-semibold transition-opacity hover:opacity-95 disabled:opacity-50"
-                     style={{
-                       backgroundImage:
-                         "linear-gradient(117.96deg, #6f58da, #5131e7)",
-                       boxShadow: "0 8px 24px rgba(111, 88, 218, 0.45)",
-                     }}
-                   >
-                     {loading ? "Signing In..." : "Sign In"}
-                   </button>
-                 </form>
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4 bg-white/5 border border-white/10 rounded focus:ring-electric focus:border-electric"
+                      />
+                      <span className="ml-2 text-sm text-muted">
+                        Remember me
+                      </span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => router.push("/reset-password")}
+                      className="text-sm text-electric hover:text-electric-alt transition-colors"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
 
-                 <div className="mt-6 text-center">
-                   <p className="text-muted text-sm">
-                     Don't have an account?{" "}
-                     <a
-                       href="#"
-                       className="text-electric hover:text-electric-alt transition-colors"
-                     >
-                       Request access
-                     </a>
-                   </p>
-                 </div>
-               </motion.div>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full rounded-full text-white px-6 py-3 font-semibold transition-opacity hover:opacity-95 disabled:opacity-50"
+                    style={{
+                      backgroundImage:
+                        "linear-gradient(117.96deg, #6f58da, #5131e7)",
+                      boxShadow: "0 8px 24px rgba(111, 88, 218, 0.45)",
+                    }}
+                  >
+                    {loading ? "Signing In..." : "Sign In"}
+                  </button>
+                </form>
+
+                {/* Divider */}
+                <div className="flex items-center my-6">
+                  <div className="flex-1 border-t border-white/10"></div>
+                  <span className="px-4 text-muted text-sm">or</span>
+                  <div className="flex-1 border-t border-white/10"></div>
+                </div>
+
+                {/* Wallet Connect Button */}
+                <button
+                  type="button"
+                  onClick={() => privyLogin()}
+                  disabled={!ready}
+                  className="w-full rounded-full text-white px-6 py-3 font-semibold transition-all hover:scale-[1.02] disabled:opacity-50 bg-white/10 border border-white/20 hover:bg-white/15 flex items-center justify-center gap-3"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect width="20" height="14" x="2" y="5" rx="2" />
+                    <path d="M2 10h20" />
+                  </svg>
+                  {ready ? "Connect Wallet" : "Loading..."}
+                </button>
+
+                <div className="mt-6 text-center">
+                  <p className="text-muted text-sm">
+                    Don't have an account?{" "}
+                    <a
+                      href="#"
+                      className="text-electric hover:text-electric-alt transition-colors"
+                    >
+                      Request access
+                    </a>
+                  </p>
+                </div>
+              </motion.div>
             </div>
           </motion.div>
         </div>
@@ -377,18 +426,18 @@ export default function CareerPortalPage() {
   const handleSaveProfile = async () => {
     setIsSaving(true);
     setSaveMessage(null);
-    
+
     try {
       // Prepare career interests data for JSON field
       const selectedInterests: string[] = [];
-      
+
       // Check engineering interests
       Object.entries(careerInterests.engineering).forEach(([key, value]) => {
         if (value) {
           selectedInterests.push(key.replace(/([A-Z])/g, ' $1').trim());
         }
       });
-      
+
       // Check other interests
       Object.entries(careerInterests).forEach(([key, value]) => {
         if (key !== 'engineering' && value) {
@@ -397,7 +446,7 @@ export default function CareerPortalPage() {
       });
 
       const profileData = {
-        email: session?.user.email,
+        email: getUserIdentifier(), // Use wallet address or email from Privy/Supabase
         expected_graduation: profile.graduationDate ? new Date(profile.graduationDate).getFullYear() : null,
         degree: profile.academicProgram,
         career_interests: selectedInterests,
@@ -492,7 +541,7 @@ export default function CareerPortalPage() {
                   <input
                     type="checkbox"
                     checked={value}
-                    onChange={(e) => 
+                    onChange={(e) =>
                       setCareerInterests({
                         ...careerInterests,
                         engineering: {
@@ -510,7 +559,7 @@ export default function CareerPortalPage() {
               ))}
             </div>
           </div>
-          
+
           <div>
             <h4 className="text-sm font-medium text-white mb-2">Other Interests</h4>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -519,7 +568,7 @@ export default function CareerPortalPage() {
                   <input
                     type="checkbox"
                     checked={typeof value === 'boolean' ? value : false}
-                    onChange={(e) => 
+                    onChange={(e) =>
                       setCareerInterests({
                         ...careerInterests,
                         [key]: e.target.checked,
@@ -629,7 +678,9 @@ export default function CareerPortalPage() {
                 <span className="block text-electric">Profile</span>
               </h1>
               <p className="text-muted text-lg">
-                Welcome back, {session?.user.email?.split('@')[0]}
+                Welcome back, {session?.user.email?.split('@')[0] ||
+                  (privyUser?.wallet?.address ? `${privyUser.wallet.address.slice(0, 6)}...${privyUser.wallet.address.slice(-4)}` :
+                    privyUser?.email?.address?.split('@')[0] || 'User')}
               </p>
             </div>
             <button
