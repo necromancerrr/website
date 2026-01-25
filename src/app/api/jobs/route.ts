@@ -19,9 +19,9 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validate required fields
-    if (!company || !position || !job_posting_url) {
+    if (!job_posting_url) {
       return NextResponse.json(
-        { error: 'Company, position, and job posting URL are required' },
+        { error: 'Job posting URL is required' },
         { status: 400 }
       );
     }
