@@ -11,7 +11,6 @@ export default function JobsPage() {
   const { ready, authenticated } = usePrivy();
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<any>(null);
-  const [numOfJobs, setNumOfJobs] = useState(0)
 
   useEffect(() => {
     const getSession = async () => {
@@ -26,8 +25,32 @@ export default function JobsPage() {
     getSession();
   }, []);
 
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
   // Check if user is authenticated via either Supabase or Privy
   const isAuthenticated = user || (ready && authenticated);
+
+  // Fetch jobs when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchJobs();
+    }
+  }, [isAuthenticated]);
+
+  const fetchJobs = async () => {
+    try {
+      const response = await fetch('/api/jobs');
+      const result = await response.json();
+      if (response.ok) {
+        setJobs(result.data);
+      }
+    } catch (error) {
+      console.error('Error fetching jobs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!isAuthenticated) {
     return (
@@ -66,31 +89,126 @@ export default function JobsPage() {
     );
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-28 lg:pt-24">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute inset-x-0 -top-24 h-64 bg-radial-fade" />
+        </div>
+
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
+            <div className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-12 accent-glow text-center">
+              <p className="text-muted">Loading job opportunities...</p>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen pt-28 lg:pt-24">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-x-0 -top-24 h-64 bg-radial-fade" />
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
+            className="text-center mb-12"
+          >
+            <h1 className="font-heading text-4xl sm:text-5xl text-white leading-tight mb-4">
+              Job Opportunities
+              <span className="block text-electric">Latest Postings</span>
+            </h1>
+            <p className="text-muted text-lg">
+              Career opportunities curated for the UW Blockchain community.
+            </p>
+          </motion.div>
+
           {/* Job Listings */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
-            className="text-center py-12"
+            className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-8 accent-glow"
           >
-            <div className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-12 accent-glow">
-              {/* TODO: fetch API from Supabase for job postings from there */}
-              {numOfJobs == 0 && (
-                <p>We will update this page soon.</p>
-              )}
-            </div>
+            {jobs.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted mb-4">No job opportunities available at the moment.</p>
+                <p className="text-sm text-muted">Check back soon for new postings!</p>
+              </div>
+            ) : (
+              <ul className="space-y-4">
+                {jobs.map((job, index) => (
+                  <motion.li
+                    key={job.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                    className="flex items-start gap-3 py-3 border-b border-white/5 last:border-0"
+                  >
+                    <span className="text-electric mt-1 text-lg">•</span>
+                    <div className="flex-1">
+                      <div className="text-white">
+                        {job.company && <span className="font-semibold">{job.company}</span>}
+                        {job.company && job.position && " is hiring "}
+                        {job.position && <span className="font-medium">{job.position}</span>}
+                        {!job.company && !job.position && "Job opportunity"}
+                      </div>
+                      <div className="flex items-center gap-4 mt-1">
+                        <a
+                          href={job.job_posting_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-electric hover:opacity-80 text-sm transition-opacity"
+                        >
+                          Apply here →
+                        </a>
+                        {job.experience_level && (
+                          <span className="px-2 py-1 bg-white/10 rounded text-xs text-muted">
+                            {job.experience_level}
+                          </span>
+                        )}
+                      </div>
+                      {job.notes && (
+                        <div className="mt-2 text-sm text-muted bg-white/5 rounded p-2">
+                          <strong>Note:</strong> {job.notes}
+                        </div>
+                      )}
+                      <div className="mt-2 text-xs text-muted">
+                        Posted {new Date(job.created_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </motion.li>
+                ))}
+              </ul>
+            )}
+          </motion.div>
+
+          {/* Stats */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+            className="mt-8 text-center"
+          >
+            <p className="text-muted text-sm">
+              {jobs.length} job{jobs.length !== 1 ? 's' : ''} available
+            </p>
           </motion.div>
         </motion.div>
       </div>
