@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import type { Job, CareerField } from '@/types/career';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,7 +17,15 @@ export async function POST(request: NextRequest) {
       job_posting_url,
       experience_level,
       notes,
-    } = body;
+      career_fields,
+    } = body as {
+      company?: string;
+      position?: string;
+      job_posting_url?: string;
+      experience_level?: string;
+      notes?: string;
+      career_fields?: CareerField[];
+    };
 
     // Validate required fields
     if (!job_posting_url) {
@@ -37,11 +46,13 @@ export async function POST(request: NextRequest) {
     }
 
     const jobData = {
-      company: company.trim(),
-      position: position.trim(),
+      company: company?.trim() || null,
+      position: position?.trim() || null,
       job_posting_url: job_posting_url.trim(),
       experience_level: experience_level?.trim() || null,
       notes: notes?.trim() || null,
+      career_fields: career_fields || null,
+      is_active: true,
     };
 
     const { data, error } = await supabase
@@ -59,7 +70,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { message: 'Job posting created successfully', data },
+      { message: 'Job posting created successfully', data: data as Job },
       { status: 201 }
     );
 
@@ -77,6 +88,7 @@ export async function GET(request: NextRequest) {
     const { data: jobs, error } = await supabase
       .from('jobs')
       .select('*')
+      .eq('is_active', true)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -88,7 +100,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { data: jobs || [] },
+      { data: (jobs || []) as Job[] },
       { status: 200 }
     );
 

@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/api/supabase";
 import { usePrivy } from "@privy-io/react-auth";
 import type { Session } from "@supabase/supabase-js";
+import type { Job, CareerField } from "@/types/career";
+import { CAREER_FIELD_LABELS, CAREER_FIELD_OPTIONS } from "@/types/career";
 
 export default function JobsPage() {
   const router = useRouter();
@@ -25,8 +27,9 @@ export default function JobsPage() {
     getSession();
   }, []);
 
-  const [jobs, setJobs] = useState<any[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedFields, setSelectedFields] = useState<CareerField[]>([]);
 
   // Check if user is authenticated via either Supabase or Privy
   const isAuthenticated = user || (ready && authenticated);
@@ -51,6 +54,24 @@ export default function JobsPage() {
       setLoading(false);
     }
   };
+
+  const toggleCareerField = (field: CareerField) => {
+    setSelectedFields(prev => 
+      prev.includes(field) 
+        ? prev.filter(f => f !== field)
+        : [...prev, field]
+    );
+  };
+
+  const clearFilters = () => {
+    setSelectedFields([]);
+  };
+
+  const filteredJobs = selectedFields.length > 0
+    ? jobs.filter(job => 
+        job.career_fields?.some(f => selectedFields.includes(f))
+      )
+    : jobs;
 
   if (!isAuthenticated) {
     return (
@@ -139,6 +160,41 @@ export default function JobsPage() {
             </p>
           </motion.div>
 
+          {/* Career Field Filters */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+            className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-6 accent-glow mb-8"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-white">Filter by Career Field</h2>
+              {selectedFields.length > 0 && (
+                <button
+                  onClick={clearFilters}
+                  className="text-sm text-electric hover:text-electric-alt transition-colors"
+                >
+                  Clear filters
+                </button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {CAREER_FIELD_OPTIONS.map((field) => (
+                <button
+                  key={field}
+                  onClick={() => toggleCareerField(field)}
+                  className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                    selectedFields.includes(field)
+                      ? "bg-electric text-white"
+                      : "bg-white/10 text-muted hover:bg-white/20 hover:text-white"
+                  }`}
+                >
+                  {CAREER_FIELD_LABELS[field]}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+
           {/* Job Listings */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -146,14 +202,22 @@ export default function JobsPage() {
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
             className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-8 accent-glow"
           >
-            {jobs.length === 0 ? (
+            {filteredJobs.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-muted mb-4">No job opportunities available at the moment.</p>
-                <p className="text-sm text-muted">Check back soon for new postings!</p>
+                <p className="text-muted mb-4">
+                  {selectedFields.length > 0 
+                    ? "No jobs match your selected filters."
+                    : "No job opportunities available at the moment."}
+                </p>
+                <p className="text-sm text-muted">
+                  {selectedFields.length > 0 
+                    ? "Try adjusting your filters."
+                    : "Check back soon for new postings!"}
+                </p>
               </div>
             ) : (
               <ul className="space-y-4">
-                {jobs.map((job, index) => (
+                {filteredJobs.map((job, index) => (
                   <motion.li
                     key={job.id}
                     initial={{ opacity: 0, x: -20 }}
@@ -169,7 +233,22 @@ export default function JobsPage() {
                         {job.position && <span className="font-medium">{job.position}</span>}
                         {!job.company && !job.position && "Job opportunity"}
                       </div>
-                      <div className="flex items-center gap-4 mt-1">
+                      
+                      {/* Career Field Tags */}
+                      {job.career_fields && job.career_fields.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {job.career_fields.map((field) => (
+                            <span
+                              key={field}
+                              className="px-2 py-0.5 bg-electric/20 text-electric text-xs rounded-full"
+                            >
+                              {CAREER_FIELD_LABELS[field]}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center gap-4 mt-2">
                         <a
                           href={job.job_posting_url}
                           target="_blank"
@@ -207,7 +286,8 @@ export default function JobsPage() {
             className="mt-8 text-center"
           >
             <p className="text-muted text-sm">
-              {jobs.length} job{jobs.length !== 1 ? 's' : ''} available
+              {filteredJobs.length} job{filteredJobs.length !== 1 ? 's' : ''} 
+              {selectedFields.length > 0 && ` (filtered from ${jobs.length})`}
             </p>
           </motion.div>
         </motion.div>
