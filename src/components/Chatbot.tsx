@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useRef, useEffect, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
 import { X, Minus, Send, Bot, ChevronDown, Loader2, MessageCircle } from 'lucide-react';
 
 interface Message {
@@ -207,7 +208,13 @@ export function ChatProvider({ children }: ChatProviderProps) {
                         : 'bg-white/10 text-white'
                     }`}
                   >
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    {message.role === 'user' ? (
+                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    ) : (
+                      <div className="text-sm prose prose-invert prose-sm max-w-none">
+                        <ReactMarkdown>{message.content}</ReactMarkdown>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               ))}
