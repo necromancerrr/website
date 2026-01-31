@@ -1,19 +1,39 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useState, useRef, useEffect, ReactNode } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import ReactMarkdown from 'react-markdown';
-import { X, Minus, Send, Bot, ChevronDown, Loader2, MessageCircle } from 'lucide-react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useRef,
+  useEffect,
+  ReactNode,
+} from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import ReactMarkdown from "react-markdown";
+import {
+  X,
+  Minus,
+  Send,
+  Bot,
+  ChevronDown,
+  Loader2,
+  MessageCircle,
+} from "lucide-react";
 
 interface Message {
   id: string;
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
   parts?: Array<{ type: string; text: string }>;
 }
 
 interface ChatContextType {
-  openChat: (jobId?: string, jobTitle?: string, jobCompany?: string, jobPostingUrl?: string) => void;
+  openChat: (
+    jobId?: string,
+    jobTitle?: string,
+    jobCompany?: string,
+    jobPostingUrl?: string,
+  ) => void;
   closeChat: () => void;
 }
 
@@ -22,7 +42,7 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 export function useChatContext() {
   const context = useContext(ChatContext);
   if (!context) {
-    throw new Error('useChatContext must be used within ChatProvider');
+    throw new Error("useChatContext must be used within ChatProvider");
   }
   return context;
 }
@@ -39,40 +59,57 @@ interface ActiveJob {
 }
 
 export function ChatProvider({ children }: ChatProviderProps) {
-  const [windowState, setWindowState] = useState<'closed' | 'minimized' | 'open'>('closed');
+  const [windowState, setWindowState] = useState<
+    "closed" | "minimized" | "open"
+  >("closed");
   const [activeJob, setActiveJob] = useState<ActiveJob>({});
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isScraping, setIsScraping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const openChat = (jobId?: string, jobTitle?: string, jobCompany?: string, jobPostingUrl?: string) => {
-    console.log('[Chatbot] Opening chat with:', { jobId, jobTitle, jobCompany, jobPostingUrl });
-    setActiveJob({ id: jobId, title: jobTitle, company: jobCompany, postingUrl: jobPostingUrl });
+  const openChat = (
+    jobId?: string,
+    jobTitle?: string,
+    jobCompany?: string,
+    jobPostingUrl?: string,
+  ) => {
+    console.log("[Chatbot] Opening chat with:", {
+      jobId,
+      jobTitle,
+      jobCompany,
+      jobPostingUrl,
+    });
+    setActiveJob({
+      id: jobId,
+      title: jobTitle,
+      company: jobCompany,
+      postingUrl: jobPostingUrl,
+    });
     setMessages([]);
-    setInput('');
-    setWindowState('open');
+    setInput("");
+    setWindowState("open");
   };
 
   const closeChat = () => {
-    setWindowState('closed');
+    setWindowState("closed");
   };
 
   const minimizeWindow = () => {
-    setWindowState('minimized');
+    setWindowState("minimized");
   };
 
   const toggleWindow = () => {
-    setWindowState(prev => prev === 'open' ? 'minimized' : 'open');
+    setWindowState((prev) => (prev === "open" ? "minimized" : "open"));
   };
 
   const sendMessage = async () => {
@@ -80,57 +117,58 @@ export function ChatProvider({ children }: ChatProviderProps) {
 
     const userMessage: Message = {
       id: crypto.randomUUID(),
-      role: 'user',
+      role: "user",
       content: input,
     };
 
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
     setIsLoading(true);
     setIsScraping(true);
 
     try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: input,
           jobPostingUrl: activeJob.postingUrl,
-          context: activeJob.title && activeJob.company
-            ? `Job: ${activeJob.title} at ${activeJob.company}`
-            : undefined,
+          context:
+            activeJob.title && activeJob.company
+              ? `Job: ${activeJob.title} at ${activeJob.company}`
+              : undefined,
         }),
       });
 
       setIsScraping(false);
       const data = await response.json();
 
-      console.log('[Chatbot] API response:', data);
+      console.log("[Chatbot] API response:", data);
 
       if (data.messages && data.messages.length > 0) {
         const assistantMessage: Message = {
           id: crypto.randomUUID(),
-          role: 'assistant',
-          content: data.messages[0].content || '',
+          role: "assistant",
+          content: data.messages[0].content || "",
         };
-        setMessages(prev => [...prev, assistantMessage]);
+        setMessages((prev) => [...prev, assistantMessage]);
       } else if (data.error) {
         const errorMessage: Message = {
           id: crypto.randomUUID(),
-          role: 'assistant',
+          role: "assistant",
           content: `Error: ${data.error}`,
         };
-        setMessages(prev => [...prev, errorMessage]);
+        setMessages((prev) => [...prev, errorMessage]);
       }
     } catch (error) {
       setIsScraping(false);
-      console.error('[Chatbot] Send error:', error);
+      console.error("[Chatbot] Send error:", error);
       const errorMessage: Message = {
         id: crypto.randomUUID(),
-        role: 'assistant',
-        content: 'Sorry, something went wrong. Please try again.',
+        role: "assistant",
+        content: "Sorry, something went wrong. Please try again.",
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
@@ -146,19 +184,17 @@ export function ChatProvider({ children }: ChatProviderProps) {
       {children}
 
       <AnimatePresence>
-        {windowState === 'open' && (
+        {windowState === "open" && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
             className="fixed bottom-24 right-6 w-80 md:w-96 bg-black/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50"
-            style={{ boxShadow: '0 0 40px rgba(106, 13, 255, 0.3)' }}
+            style={{ boxShadow: "0 0 40px rgba(106, 13, 255, 0.3)" }}
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-white/5">
-              <div className="flex items-center gap-2">
-                <Bot className="w-5 h-5 text-electric" />
-                <span className="font-semibold text-white">Job Assistant</span>
+              <div className="flex items-center gap-1">
                 {activeJob.title && (
                   <span className="text-xs text-electric px-2 py-0.5 bg-electric/20 rounded-full">
                     {activeJob.title}
@@ -194,22 +230,24 @@ export function ChatProvider({ children }: ChatProviderProps) {
                 </div>
               )}
 
-              {messages.map(message => (
+              {messages.map((message) => (
                 <motion.div
                   key={message.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div
                     className={`max-w-[85%] rounded-2xl px-4 py-2.5 ${
-                      message.role === 'user'
-                        ? 'bg-electric text-white'
-                        : 'bg-white/10 text-white'
+                      message.role === "user"
+                        ? "bg-electric text-white"
+                        : "bg-white/10 text-white"
                     }`}
                   >
-                    {message.role === 'user' ? (
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    {message.role === "user" ? (
+                      <p className="text-sm whitespace-pre-wrap">
+                        {message.content}
+                      </p>
                     ) : (
                       <div className="text-sm prose prose-invert prose-sm max-w-none">
                         <ReactMarkdown>{message.content}</ReactMarkdown>
@@ -228,17 +266,41 @@ export function ChatProvider({ children }: ChatProviderProps) {
                   <div className="bg-white/10 rounded-2xl px-4 py-3">
                     {isScraping ? (
                       <div className="flex items-center gap-2 text-sm text-purple-300">
-                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        <svg
+                          className="w-4 h-4 animate-spin"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
                         </svg>
                         <span>reading webpage...</span>
                       </div>
                     ) : (
                       <div className="flex gap-1">
-                        <span className="w-2 h-2 bg-electric/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <span className="w-2 h-2 bg-electric/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <span className="w-2 h-2 bg-electric/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                        <span
+                          className="w-2 h-2 bg-electric/50 rounded-full animate-bounce"
+                          style={{ animationDelay: "0ms" }}
+                        />
+                        <span
+                          className="w-2 h-2 bg-electric/50 rounded-full animate-bounce"
+                          style={{ animationDelay: "150ms" }}
+                        />
+                        <span
+                          className="w-2 h-2 bg-electric/50 rounded-full animate-bounce"
+                          style={{ animationDelay: "300ms" }}
+                        />
                       </div>
                     )}
                   </div>
@@ -248,7 +310,10 @@ export function ChatProvider({ children }: ChatProviderProps) {
               <div ref={messagesEndRef} />
             </div>
 
-            <form onSubmit={handleSubmit} className="p-3 border-t border-white/10">
+            <form
+              onSubmit={handleSubmit}
+              className="p-3 border-t border-white/10"
+            >
               <div className="flex items-center gap-2">
                 <input
                   type="text"
@@ -270,20 +335,32 @@ export function ChatProvider({ children }: ChatProviderProps) {
                   )}
                 </button>
               </div>
+              <div className="mt-2 text-center">
+                <span className="text-white/40 text-xs">
+                  Powered by{" "}
+                  <a
+                    href="https://near.ai/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Near AI
+                  </a>
+                </span>
+              </div>
             </form>
           </motion.div>
         )}
       </AnimatePresence>
 
       <AnimatePresence>
-        {windowState !== 'closed' && (
+        {windowState !== "closed" && (
           <motion.button
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}
             onClick={toggleWindow}
             className="fixed bottom-6 right-6 p-4 bg-electric hover:bg-electric-alt rounded-full shadow-lg transition-colors z-50"
-            style={{ boxShadow: '0 0 20px rgba(106, 13, 255, 0.5)' }}
+            style={{ boxShadow: "0 0 20px rgba(106, 13, 255, 0.5)" }}
           >
             <Bot className="w-6 h-6 text-white" />
           </motion.button>
@@ -291,7 +368,7 @@ export function ChatProvider({ children }: ChatProviderProps) {
       </AnimatePresence>
 
       <AnimatePresence>
-        {windowState === 'minimized' && (
+        {windowState === "minimized" && (
           <motion.button
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -300,19 +377,21 @@ export function ChatProvider({ children }: ChatProviderProps) {
             className="fixed bottom-6 right-6 p-3 bg-black/80 backdrop-blur-xl border border-white/10 rounded-xl hover:bg-white/10 transition-colors z-50 flex items-center gap-2"
           >
             <Bot className="w-5 h-5 text-electric" />
-            <span className="text-sm text-white font-medium">Job Assistant</span>
+            <span className="text-sm text-white font-medium">
+              Job Assistant
+            </span>
             <ChevronDown className="w-4 h-4 text-muted" />
           </motion.button>
         )}
       </AnimatePresence>
 
-      {windowState === 'closed' && (
+      {windowState === "closed" && (
         <motion.button
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           onClick={() => openChat()}
           className="fixed bottom-6 right-6 p-4 bg-electric hover:bg-electric-alt rounded-full shadow-lg transition-colors z-50"
-          style={{ boxShadow: '0 0 20px rgba(106, 13, 255, 0.5)' }}
+          style={{ boxShadow: "0 0 20px rgba(106, 13, 255, 0.5)" }}
         >
           <Bot className="w-6 h-6 text-white" />
         </motion.button>
@@ -328,7 +407,12 @@ interface ChatbotIconProps {
   jobPostingUrl?: string;
 }
 
-export function ChatbotIcon({ jobId, jobTitle, jobCompany, jobPostingUrl }: ChatbotIconProps) {
+export function ChatbotIcon({
+  jobId,
+  jobTitle,
+  jobCompany,
+  jobPostingUrl,
+}: ChatbotIconProps) {
   const { openChat } = useChatContext();
 
   const handleClick = () => {
