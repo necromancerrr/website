@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/api/supabase";
 import type { Session } from "@supabase/supabase-js";
+import type { Job, CareerField } from "@/types/career";
+import { CAREER_FIELD_OPTIONS, CAREER_FIELD_LABELS } from "@/types/career";
 
 export default function ManageJobsPage() {
   const [user, setUser] = useState<any>(null);
@@ -14,23 +16,22 @@ export default function ManageJobsPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Job management state
-  const [jobs, setJobs] = useState<any[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [formData, setFormData] = useState({
     company: "",
     position: "",
     job_posting_url: "",
     experience_level: "",
     notes: "",
+    career_fields: [] as CareerField[],
   });
   const [formError, setFormError] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
 
   const stats = {
     total: jobs.length,
-    active: jobs.filter((job) => job.experience_level !== "Archived").length,
-    draft: 0,
-    expired: 0,
   };
 
   // Check for existing session on mount
@@ -89,14 +90,28 @@ export default function ManageJobsPage() {
 
   const fetchJobs = async () => {
     try {
+      console.log('Fetching jobs from API...');
       const response = await fetch("/api/jobs");
       const result = await response.json();
+      console.log('API response:', { status: response.status, data: result });
       if (response.ok) {
-        setJobs(result.data);
+        setJobs(result.data || []);
+        console.log('Jobs loaded:', result.data?.length || 0);
+      } else {
+        console.error('API error:', result.error);
       }
     } catch (error) {
       console.error("Error fetching jobs:", error);
     }
+  };
+
+  const toggleCareerField = (field: CareerField) => {
+    setFormData(prev => ({
+      ...prev,
+      career_fields: prev.career_fields.includes(field)
+        ? prev.career_fields.filter(f => f !== field)
+        : [...prev.career_fields, field]
+    }));
   };
 
   const handleCreateJob = async (e: React.FormEvent) => {
@@ -124,6 +139,7 @@ export default function ManageJobsPage() {
         job_posting_url: "",
         experience_level: "",
         notes: "",
+        career_fields: [],
       });
       setShowCreateModal(false);
       fetchJobs(); // Refresh the list
@@ -132,6 +148,67 @@ export default function ManageJobsPage() {
     } finally {
       setFormLoading(false);
     }
+  };
+
+  const startEditJob = (job: Job) => {
+    setEditingJob(job);
+    setFormData({
+      company: job.company || "",
+      position: job.position || "",
+      job_posting_url: job.job_posting_url || "",
+      experience_level: job.experience_level || "",
+      notes: job.notes || "",
+      career_fields: job.career_fields || [],
+    });
+  };
+
+  const handleUpdateJob = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingJob) return;
+
+    setFormError(null);
+    setFormLoading(true);
+
+    try {
+      console.log('Updating job ID:', editingJob.id);
+      console.log('Form data:', JSON.stringify(formData, null, 2));
+      
+      const response = await fetch(`/api/jobs/${editingJob.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+      console.log('Update response:', { status: response.status, result });
+
+      if (!response.ok) {
+        console.error('Update failed:', result);
+        setFormError(result.error || result.details || result.code || "Failed to update job posting");
+        return;
+      }
+
+      setEditingJob(null);
+      resetForm();
+      fetchJobs();
+    } catch (error) {
+      console.error('Update error:', error);
+      setFormError("Failed to update job posting");
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      company: "",
+      position: "",
+      job_posting_url: "",
+      experience_level: "",
+      notes: "",
+      career_fields: [],
+    });
+    setShowCreateModal(false);
   };
 
   const handleDeleteJob = async (jobId: number) => {
@@ -395,6 +472,25 @@ export default function ManageJobsPage() {
               >
                 Create New Job Posting
               </button>
+              <button
+                onClick={fetchJobs}
+                className="px-6 py-3 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-colors font-semibold"
+              >
+                Refresh
+              </button>
+            </div>
+          </motion.div>
+
+          {/* Stats */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.25 }}
+            className="grid grid-cols-1 gap-4 mb-8"
+          >
+            <div className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-xl p-4">
+              <p className="text-muted text-sm">Total Jobs</p>
+              <p className="text-2xl font-bold text-white">{stats.total}</p>
             </div>
           </motion.div>
 
@@ -533,6 +629,28 @@ export default function ManageJobsPage() {
                   </div>
 
                   <div>
+                    <label className="block text-sm font-medium text-white mb-2">
+                      Career Fields (optional)
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {CAREER_FIELD_OPTIONS.map((field) => (
+                        <button
+                          key={field}
+                          type="button"
+                          onClick={() => toggleCareerField(field)}
+                          className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                            formData.career_fields.includes(field)
+                              ? "bg-electric text-white"
+                              : "bg-white/10 text-muted hover:bg-white/20 hover:text-white"
+                          }`}
+                        >
+                          {CAREER_FIELD_LABELS[field]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
                     <label
                       htmlFor="notes"
                       className="block text-sm font-medium text-white mb-1"
@@ -577,8 +695,209 @@ export default function ManageJobsPage() {
             </motion.div>
           )}
 
+          {/* Edit Job Modal */}
+          {editingJob && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+              onClick={() => setEditingJob(null)}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="bg-black/90 backdrop-blur-md border border-electric/30 rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto accent-glow"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-semibold text-white">
+                    Edit Job Posting
+                  </h2>
+                  <button
+                    onClick={() => setEditingJob(null)}
+                    className="text-muted hover:text-white transition-colors"
+                  >
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                <form onSubmit={handleUpdateJob} className="space-y-4">
+                  {formError && (
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-2 text-red-400 text-sm">
+                      {formError}
+                    </div>
+                  )}
+
+                  <div>
+                    <label
+                      htmlFor="edit_job_posting_url"
+                      className="block text-sm font-medium text-white mb-1"
+                    >
+                      Job Posting URL (required)
+                    </label>
+                    <input
+                      id="edit_job_posting_url"
+                      type="url"
+                      value={formData.job_posting_url}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          job_posting_url: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="edit_company"
+                      className="block text-sm font-medium text-white mb-1"
+                    >
+                      Company Name (optional)
+                    </label>
+                    <input
+                      id="edit_company"
+                      type="text"
+                      value={formData.company}
+                      onChange={(e) =>
+                        setFormData({ ...formData, company: e.target.value })
+                      }
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="edit_position"
+                      className="block text-sm font-medium text-white mb-1"
+                    >
+                      Position Title (optional)
+                    </label>
+                    <input
+                      id="edit_position"
+                      type="text"
+                      value={formData.position}
+                      onChange={(e) =>
+                        setFormData({ ...formData, position: e.target.value })
+                      }
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="edit_experience_level"
+                      className="block text-sm font-medium text-white mb-1"
+                    >
+                      Experience Level (optional)
+                    </label>
+                    <select
+                      id="edit_experience_level"
+                      value={formData.experience_level}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          experience_level: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
+                    >
+                      <option value="">Select experience level</option>
+                      <option value="Entry Level">Entry Level</option>
+                      <option value="Mid Level">Mid Level</option>
+                      <option value="Senior Level">Senior Level</option>
+                      <option value="Lead/Manager">Lead/Manager</option>
+                      <option value="Internship">Internship</option>
+                      <option value="Contract">Contract</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">
+                      Career Fields (optional)
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {CAREER_FIELD_OPTIONS.map((field) => (
+                        <button
+                          key={field}
+                          type="button"
+                          onClick={() => toggleCareerField(field)}
+                          className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                            formData.career_fields.includes(field)
+                              ? "bg-electric text-white"
+                              : "bg-white/10 text-muted hover:bg-white/20 hover:text-white"
+                          }`}
+                        >
+                          {CAREER_FIELD_LABELS[field]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="edit_notes"
+                      className="block text-sm font-medium text-white mb-1"
+                    >
+                      Notes (optional)
+                    </label>
+                    <textarea
+                      id="edit_notes"
+                      value={formData.notes}
+                      onChange={(e) =>
+                        setFormData({ ...formData, notes: e.target.value })
+                      }
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
+                      placeholder="Additional notes (e.g., Referral available, deadline)"
+                      rows={2}
+                    />
+                  </div>
+
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="submit"
+                      disabled={formLoading}
+                      className="flex-1 rounded-full text-white px-6 py-3 font-semibold transition-opacity hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{
+                        backgroundImage:
+                          "linear-gradient(117.96deg, #6f58da, #5131e7)",
+                        boxShadow: "0 8px 24px rgba(111, 88, 218, 0.45)",
+                      }}
+                    >
+                      {formLoading ? "Saving..." : "Save Changes"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditingJob(null)}
+                      className="px-6 py-3 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </motion.div>
+          )}
+
           {/* Jobs List */}
-          {jobs.length > 0 && (
+          {jobs.length > 0 ? (
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
@@ -586,7 +905,7 @@ export default function ManageJobsPage() {
               className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-6 accent-glow"
             >
               <h2 className="text-xl font-semibold text-white mb-6">
-                Current Job Postings
+                Current Job Postings ({jobs.length})
               </h2>
               <div className="space-y-4">
                 {jobs.map((job) => (
@@ -597,9 +916,9 @@ export default function ManageJobsPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <h3 className="text-white font-semibold mb-1">
-                          {job.position}
+                          {job.position || "Untitled Position"}
                         </h3>
-                        <p className="text-muted mb-2">{job.company}</p>
+                        <p className="text-muted mb-2">{job.company || "Unknown Company"}</p>
                         <a
                           href={job.job_posting_url}
                           target="_blank"
@@ -613,8 +932,26 @@ export default function ManageJobsPage() {
                             {job.experience_level}
                           </span>
                         )}
+                        {job.career_fields && job.career_fields.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {job.career_fields.map((field) => (
+                              <span
+                                key={field}
+                                className="px-2 py-0.5 bg-electric/20 text-electric text-xs rounded-full"
+                              >
+                                {CAREER_FIELD_LABELS[field]}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-2 ml-4">
+                        <button
+                          onClick={() => startEditJob(job)}
+                          className="px-3 py-1 bg-electric/10 border border-electric/20 text-electric rounded hover:bg-electric/20 transition-colors text-sm"
+                        >
+                          Edit
+                        </button>
                         <button
                           onClick={() => handleDeleteJob(job.id)}
                           className="px-3 py-1 bg-red-500/10 border border-red-500/20 text-red-400 rounded hover:bg-red-500/20 transition-colors text-sm"
@@ -634,6 +971,16 @@ export default function ManageJobsPage() {
                   </div>
                 ))}
               </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+              className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-12 accent-glow text-center"
+            >
+              <p className="text-muted text-lg mb-2">No job postings yet</p>
+              <p className="text-sm text-muted">Create your first job posting to get started.</p>
             </motion.div>
           )}
         </motion.div>

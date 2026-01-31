@@ -52,7 +52,6 @@ export async function POST(request: NextRequest) {
       experience_level: experience_level?.trim() || null,
       notes: notes?.trim() || null,
       career_fields: career_fields || null,
-      is_active: true,
     };
 
     const { data, error } = await supabase
@@ -85,16 +84,19 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('API: Fetching all jobs...');
+    
     const { data: jobs, error } = await supabase
       .from('jobs')
       .select('*')
-      .eq('is_active', true)
       .order('created_at', { ascending: false });
+
+    console.log('API: Jobs query result:', { count: jobs?.length, error });
 
     if (error) {
       console.error('Database error:', error);
       return NextResponse.json(
-        { error: 'Failed to fetch job postings' },
+        { error: 'Failed to fetch job postings', details: error.message },
         { status: 500 }
       );
     }

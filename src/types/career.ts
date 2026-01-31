@@ -53,7 +53,6 @@ export interface Job {
   experience_level: string | null;
   notes: string | null;
   career_fields: CareerField[] | null;
-  is_active: boolean;
   created_at: string;
   last_updated: string | null;
 }
