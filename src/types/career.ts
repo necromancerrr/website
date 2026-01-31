@@ -53,6 +53,7 @@ export interface Job {
   experience_level: string | null;
   notes: string | null;
   career_fields: CareerField[] | null;
+  referral_available: boolean | null;
   created_at: string;
   last_updated: string | null;
 }

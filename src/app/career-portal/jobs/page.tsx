@@ -30,6 +30,7 @@ export default function JobsPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedFields, setSelectedFields] = useState<CareerField[]>([]);
+  const [showReferralOnly, setShowReferralOnly] = useState(false);
 
   // Check if user is authenticated via either Supabase or Privy
   const isAuthenticated = user || (ready && authenticated);
@@ -65,13 +66,15 @@ export default function JobsPage() {
 
   const clearFilters = () => {
     setSelectedFields([]);
+    setShowReferralOnly(false);
   };
 
-  const filteredJobs = selectedFields.length > 0
-    ? jobs.filter(job => 
-        job.career_fields?.some(f => selectedFields.includes(f))
-      )
-    : jobs;
+  const filteredJobs = jobs.filter(job => {
+    const matchesCareerFields = selectedFields.length === 0 || 
+      job.career_fields?.some(f => selectedFields.includes(f));
+    const matchesReferral = !showReferralOnly || job.referral_available === true;
+    return matchesCareerFields && matchesReferral;
+  });
 
   if (!isAuthenticated) {
     return (
@@ -160,40 +163,60 @@ export default function JobsPage() {
             </p>
           </motion.div>
 
-          {/* Career Field Filters */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-            className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-6 accent-glow mb-8"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-white">Filter by Career Field</h2>
-              {selectedFields.length > 0 && (
-                <button
-                  onClick={clearFilters}
-                  className="text-sm text-electric hover:text-electric-alt transition-colors"
-                >
-                  Clear filters
-                </button>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {CAREER_FIELD_OPTIONS.map((field) => (
-                <button
-                  key={field}
-                  onClick={() => toggleCareerField(field)}
-                  className={`px-3 py-1.5 rounded-full text-sm transition-all ${
-                    selectedFields.includes(field)
-                      ? "bg-electric text-white"
-                      : "bg-white/10 text-muted hover:bg-white/20 hover:text-white"
-                  }`}
-                >
-                  {CAREER_FIELD_LABELS[field]}
-                </button>
-              ))}
-            </div>
-          </motion.div>
+           {/* Filters */}
+           <motion.div
+             initial={{ opacity: 0, y: 8 }}
+             animate={{ opacity: 1, y: 0 }}
+             transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+             className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-6 accent-glow mb-8"
+           >
+             <div className="flex items-center justify-between mb-4">
+               <h2 className="text-lg font-semibold text-white">Filters</h2>
+               {(selectedFields.length > 0 || showReferralOnly) && (
+                 <button
+                   onClick={clearFilters}
+                   className="text-sm text-electric hover:text-electric-alt transition-colors"
+                 >
+                   Clear filters
+                 </button>
+               )}
+             </div>
+             
+             <div className="mb-4">
+               <p className="text-sm font-medium text-white mb-2">Career Fields</p>
+               <div className="flex flex-wrap gap-2">
+                 {CAREER_FIELD_OPTIONS.map((field) => (
+                   <button
+                     key={field}
+                     onClick={() => toggleCareerField(field)}
+                     className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                       selectedFields.includes(field)
+                         ? "bg-electric text-white"
+                         : "bg-white/10 text-muted hover:bg-white/20 hover:text-white"
+                     }`}
+                   >
+                     {CAREER_FIELD_LABELS[field]}
+                   </button>
+                 ))}
+               </div>
+             </div>
+
+             <div className="flex items-center gap-2">
+               <input
+                 type="checkbox"
+                 id="referral_filter"
+                 checked={showReferralOnly}
+                 onChange={(e) => setShowReferralOnly(e.target.checked)}
+                 className="w-4 h-4 bg-white/5 border border-white/10 rounded focus:ring-electric focus:border-electric"
+               />
+               <label
+                 htmlFor="referral_filter"
+                 className="text-sm font-medium text-white cursor-pointer"
+               >
+                 Referral Available Only
+               </label>
+             </div>
+           </motion.div>
 
           {/* Job Listings */}
           <motion.div
@@ -202,19 +225,19 @@ export default function JobsPage() {
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
             className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-8 accent-glow"
           >
-            {filteredJobs.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-muted mb-4">
-                  {selectedFields.length > 0 
-                    ? "No jobs match your selected filters."
-                    : "No job opportunities available at the moment."}
-                </p>
-                <p className="text-sm text-muted">
-                  {selectedFields.length > 0 
-                    ? "Try adjusting your filters."
-                    : "Check back soon for new postings!"}
-                </p>
-              </div>
+             {filteredJobs.length === 0 ? (
+               <div className="text-center py-12">
+                 <p className="text-muted mb-4">
+                   {(selectedFields.length > 0 || showReferralOnly) 
+                     ? "No jobs match your selected filters."
+                     : "No job opportunities available at the moment."}
+                 </p>
+                 <p className="text-sm text-muted">
+                   {(selectedFields.length > 0 || showReferralOnly) 
+                     ? "Try adjusting your filters."
+                     : "Check back soon for new postings!"}
+                 </p>
+               </div>
             ) : (
               <ul className="space-y-4">
                 {filteredJobs.map((job, index) => (
@@ -234,21 +257,30 @@ export default function JobsPage() {
                         {!job.company && !job.position && "Job opportunity"}
                       </div>
                       
-                      {/* Career Field Tags */}
-                      {job.career_fields && job.career_fields.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {job.career_fields.map((field) => (
-                            <span
-                              key={field}
-                              className="px-2 py-0.5 bg-electric/20 text-electric text-xs rounded-full"
-                            >
-                              {CAREER_FIELD_LABELS[field]}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      
-                      <div className="flex items-center gap-4 mt-2">
+                       {/* Career Field Tags */}
+                       {job.career_fields && job.career_fields.length > 0 && (
+                         <div className="flex flex-wrap gap-1 mt-2">
+                           {job.career_fields.map((field) => (
+                             <span
+                               key={field}
+                               className="px-2 py-0.5 bg-electric/20 text-electric text-xs rounded-full"
+                             >
+                               {CAREER_FIELD_LABELS[field]}
+                             </span>
+                           ))}
+                         </div>
+                       )}
+
+                       {/* Referral Available Badge */}
+                       {job.referral_available && (
+                         <div className="flex items-center gap-1 mt-2">
+                           <span className="px-2 py-0.5 bg-green-400/20 text-green-400 text-xs rounded-full border border-green-400/20">
+                             Referral Available
+                           </span>
+                         </div>
+                       )}
+
+                       <div className="flex items-center gap-4 mt-2">
                         <a
                           href={job.job_posting_url}
                           target="_blank"
@@ -276,22 +308,22 @@ export default function JobsPage() {
                 ))}
               </ul>
             )}
-          </motion.div>
+           </motion.div>
 
-          {/* Stats */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
-            className="mt-8 text-center"
-          >
-            <p className="text-muted text-sm">
-              {filteredJobs.length} job{filteredJobs.length !== 1 ? 's' : ''} 
-              {selectedFields.length > 0 && ` (filtered from ${jobs.length})`}
-            </p>
-          </motion.div>
-        </motion.div>
-      </div>
-    </div>
-  );
+           {/* Stats */}
+           <motion.div
+             initial={{ opacity: 0, y: 8 }}
+             animate={{ opacity: 1, y: 0 }}
+             transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+             className="mt-8 text-center"
+           >
+             <p className="text-muted text-sm">
+               {filteredJobs.length} job{filteredJobs.length !== 1 ? 's' : ''}
+               {(selectedFields.length > 0 || showReferralOnly) && ` (filtered from ${jobs.length})`}
+             </p>
+           </motion.div>
+         </motion.div>
+       </div>
+     </div>
+   );
 }

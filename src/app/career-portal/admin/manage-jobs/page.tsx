@@ -26,6 +26,7 @@ export default function ManageJobsPage() {
     experience_level: "",
     notes: "",
     career_fields: [] as CareerField[],
+    referral_available: false,
   });
   const [formError, setFormError] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
@@ -140,6 +141,7 @@ export default function ManageJobsPage() {
         experience_level: "",
         notes: "",
         career_fields: [],
+        referral_available: false,
       });
       setShowCreateModal(false);
       fetchJobs(); // Refresh the list
@@ -159,6 +161,7 @@ export default function ManageJobsPage() {
       experience_level: job.experience_level || "",
       notes: job.notes || "",
       career_fields: job.career_fields || [],
+      referral_available: job.referral_available || false,
     });
   };
 
@@ -207,6 +210,7 @@ export default function ManageJobsPage() {
       experience_level: "",
       notes: "",
       career_fields: [],
+      referral_available: false,
     });
     setShowCreateModal(false);
   };
@@ -644,19 +648,37 @@ export default function ManageJobsPage() {
                               : "bg-white/10 text-muted hover:bg-white/20 hover:text-white"
                           }`}
                         >
-                          {CAREER_FIELD_LABELS[field]}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                           {CAREER_FIELD_LABELS[field]}
+                         </button>
+                       ))}
+                     </div>
+                   </div>
 
-                  <div>
-                    <label
-                      htmlFor="notes"
-                      className="block text-sm font-medium text-white mb-1"
-                    >
-                      Notes (optional)
-                    </label>
+                   <div className="flex items-center gap-2">
+                     <input
+                       type="checkbox"
+                       id="referral_available"
+                       checked={formData.referral_available}
+                       onChange={(e) =>
+                         setFormData({ ...formData, referral_available: e.target.checked })
+                       }
+                       className="w-4 h-4 bg-white/5 border border-white/10 rounded focus:ring-electric focus:border-electric"
+                     />
+                     <label
+                       htmlFor="referral_available"
+                       className="text-sm font-medium text-white cursor-pointer"
+                     >
+                       Referral Available
+                     </label>
+                   </div>
+
+                   <div>
+                     <label
+                       htmlFor="notes"
+                       className="block text-sm font-medium text-white mb-1"
+                     >
+                       Notes (optional)
+                     </label>
                     <textarea
                       id="notes"
                       value={formData.notes}
@@ -845,22 +867,40 @@ export default function ManageJobsPage() {
                               : "bg-white/10 text-muted hover:bg-white/20 hover:text-white"
                           }`}
                         >
-                          {CAREER_FIELD_LABELS[field]}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                           {CAREER_FIELD_LABELS[field]}
+                         </button>
+                       ))}
+                     </div>
+                   </div>
 
-                  <div>
-                    <label
-                      htmlFor="edit_notes"
-                      className="block text-sm font-medium text-white mb-1"
-                    >
-                      Notes (optional)
-                    </label>
-                    <textarea
-                      id="edit_notes"
-                      value={formData.notes}
+                   <div className="flex items-center gap-2">
+                     <input
+                       type="checkbox"
+                       id="edit_referral_available"
+                       checked={formData.referral_available}
+                       onChange={(e) =>
+                         setFormData({ ...formData, referral_available: e.target.checked })
+                       }
+                       className="w-4 h-4 bg-white/5 border border-white/10 rounded focus:ring-electric focus:border-electric"
+                     />
+                     <label
+                       htmlFor="edit_referral_available"
+                       className="text-sm font-medium text-white cursor-pointer"
+                     >
+                       Referral Available
+                     </label>
+                   </div>
+
+                   <div>
+                     <label
+                       htmlFor="edit_notes"
+                       className="block text-sm font-medium text-white mb-1"
+                     >
+                       Notes (optional)
+                     </label>
+                     <textarea
+                       id="edit_notes"
+                       value={formData.notes}
                       onChange={(e) =>
                         setFormData({ ...formData, notes: e.target.value })
                       }
