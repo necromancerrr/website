@@ -9,6 +9,7 @@ interface Member {
   first_name: string;
   last_name: string;
   email: string;
+  wallet_address?: string;
   created_at: string;
   is_active: boolean;
 }
@@ -25,7 +26,15 @@ export default function ManageMembersPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [memberEmail, setMemberEmail] = useState("");
+  const [walletAddress, setWalletAddress] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
+
+  // Edit form states
+  const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [editFirstName, setEditFirstName] = useState("");
+  const [editLastName, setEditLastName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editWalletAddress, setEditWalletAddress] = useState("");
 
   // Check for existing session and authorization
   useEffect(() => {
@@ -78,6 +87,7 @@ export default function ManageMembersPage() {
       const { data: MemberInformation, error } = await supabase
         .from('members')
         .select('*')
+        .not('id', 'is', null)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -141,6 +151,7 @@ export default function ManageMembersPage() {
             first_name: firstName,
             last_name: lastName,
             email: memberEmail,
+            wallet_address: walletAddress || null,
             is_active: true
           }
         ])
@@ -155,6 +166,7 @@ export default function ManageMembersPage() {
         setFirstName("");
         setLastName("");
         setMemberEmail("");
+        setWalletAddress("");
         setShowAddForm(false);
         // Refresh members list
         fetchMembers();
@@ -203,6 +215,55 @@ export default function ManageMembersPage() {
     } catch (err) {
       setError('An unexpected error occurred');
     }
+  };
+
+  const startEditMember = (member: Member) => {
+    setEditingMember(member);
+    setEditFirstName(member.first_name);
+    setEditLastName(member.last_name);
+    setEditEmail(member.email);
+    setEditWalletAddress(member.wallet_address || "");
+  };
+
+  const handleUpdateMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMember) return;
+
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const { error } = await supabase
+        .from('members')
+        .update({
+          first_name: editFirstName,
+          last_name: editLastName,
+          email: editEmail,
+          wallet_address: editWalletAddress || null,
+        })
+        .eq('id', editingMember.id);
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setSuccess(`Successfully updated member information`);
+        setEditingMember(null);
+        fetchMembers();
+      }
+    } catch (err) {
+      setError('An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditingMember(null);
+    setEditFirstName("");
+    setEditLastName("");
+    setEditEmail("");
+    setEditWalletAddress("");
   };
 
   const handleSignOut = async () => {
@@ -422,6 +483,19 @@ export default function ManageMembersPage() {
                     required
                   />
                 </div>
+                <div>
+                  <label htmlFor="walletAddress" className="block text-sm font-medium text-white mb-2">
+                    Wallet Address (Optional)
+                  </label>
+                  <input
+                    id="walletAddress"
+                    type="text"
+                    value={walletAddress}
+                    onChange={(e) => setWalletAddress(e.target.value)}
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
+                    placeholder="0x..."
+                  />
+                </div>
                 <div className="md:col-span-3 flex justify-end gap-2 mt-2">
                   <button
                     type="button"
@@ -430,6 +504,7 @@ export default function ManageMembersPage() {
                       setFirstName("");
                       setLastName("");
                       setMemberEmail("");
+                      setWalletAddress("");
                     }}
                     className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-colors text-sm"
                   >
@@ -445,6 +520,95 @@ export default function ManageMembersPage() {
                     }}
                   >
                     {loading ? "Adding..." : "Add Member"}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          )}
+
+          {/* Edit Member Form */}
+          {editingMember && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="bg-black/40 backdrop-blur-sm border border-electric/30 rounded-2xl p-6 accent-glow mb-8"
+            >
+              <h2 className="text-xl font-semibold text-white mb-4">Edit Member</h2>
+              <form onSubmit={handleUpdateMember} className="grid md:grid-cols-3 gap-4">
+                <div>
+                  <label htmlFor="editFirstName" className="block text-sm font-medium text-white mb-2">
+                    First Name
+                  </label>
+                  <input
+                    id="editFirstName"
+                    type="text"
+                    value={editFirstName}
+                    onChange={(e) => setEditFirstName(e.target.value)}
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
+                    placeholder="John"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="editLastName" className="block text-sm font-medium text-white mb-2">
+                    Last Name
+                  </label>
+                  <input
+                    id="editLastName"
+                    type="text"
+                    value={editLastName}
+                    onChange={(e) => setEditLastName(e.target.value)}
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
+                    placeholder="Doe"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="editEmail" className="block text-sm font-medium text-white mb-2">
+                    Email Address
+                  </label>
+                  <input
+                    id="editEmail"
+                    type="email"
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
+                    placeholder="john.doe@uw.edu"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="editWalletAddress" className="block text-sm font-medium text-white mb-2">
+                    Wallet Address (Optional)
+                  </label>
+                  <input
+                    id="editWalletAddress"
+                    type="text"
+                    value={editWalletAddress}
+                    onChange={(e) => setEditWalletAddress(e.target.value)}
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
+                    placeholder="0x..."
+                  />
+                </div>
+                <div className="md:col-span-3 flex justify-end gap-2 mt-2">
+                  <button
+                    type="button"
+                    onClick={cancelEdit}
+                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-colors text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-6 py-2 rounded-lg text-white text-sm transition-opacity hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      backgroundImage: "linear-gradient(117.96deg, #6f58da, #5131e7)",
+                      boxShadow: "0 4px 12px rgba(111, 88, 218, 0.35)",
+                    }}
+                  >
+                    {loading ? "Saving..." : "Save Changes"}
                   </button>
                 </div>
               </form>
@@ -481,6 +645,7 @@ export default function ManageMembersPage() {
                   <tr className="border-b border-white/10">
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted">Name</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted">Email</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted">Wallet Address</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted">Status</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted">Date Added</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted">Actions</th>
@@ -489,7 +654,7 @@ export default function ManageMembersPage() {
                 <tbody>
                   {members.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="text-center py-8 text-muted">
+                      <td colSpan={6} className="text-center py-8 text-muted">
                         No members found.
                       </td>
                     </tr>
@@ -502,6 +667,15 @@ export default function ManageMembersPage() {
                           </div>
                         </td>
                         <td className="py-4 px-4 text-white">{member.email}</td>
+                        <td className="py-4 px-4 text-muted text-sm">
+                          {member.wallet_address ? (
+                            <span className="font-mono text-xs" title={member.wallet_address}>
+                              {member.wallet_address.slice(0, 6)}...{member.wallet_address.slice(-4)}
+                            </span>
+                          ) : (
+                            <span className="text-white/40">—</span>
+                          )}
+                        </td>
                         <td className="py-4 px-4">
                           <span className={`px-3 py-1 rounded-full text-xs font-medium border ${
                             member.is_active 
@@ -516,6 +690,12 @@ export default function ManageMembersPage() {
                         </td>
                         <td className="py-4 px-4">
                           <div className="flex gap-2">
+                            <button
+                              onClick={() => startEditMember(member)}
+                              className="text-electric hover:text-electric/80 text-sm transition-colors"
+                            >
+                              Edit
+                            </button>
                             <button
                               onClick={() => handleToggleActive(member.id, member.is_active)}
                               className={`text-sm transition-colors ${
