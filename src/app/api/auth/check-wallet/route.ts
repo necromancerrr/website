@@ -3,7 +3,14 @@ import { supabaseAdmin } from '@/api/supabase-server'
 
 export async function POST(request: Request) {
   try {
-    const { walletAddress } = await request.json()
+    let walletAddress
+    try {
+      const body = await request.json()
+      walletAddress = body?.walletAddress
+    } catch (parseError) {
+      console.error('Failed to parse request body:', parseError)
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+    }
     
     if (!walletAddress) {
       return NextResponse.json({ error: 'Wallet address required' }, { status: 400 })
@@ -11,18 +18,23 @@ export async function POST(request: Request) {
 
     console.log('API: Checking wallet authorization for:', walletAddress)
 
+    if (!supabaseAdmin) {
+      console.error('Supabase admin client not initialized')
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
+    }
+
     const { data: member, error } = await supabaseAdmin
       .from('members')
       .select('id, wallet_address, is_active, email, first_name, last_name')
       .ilike('wallet_address', walletAddress.toLowerCase())
       .maybeSingle()
 
-    console.log('API: Member query result:', { member, error })
-
     if (error) {
       console.error('API Database error:', error)
       return NextResponse.json({ error: 'Database error' }, { status: 500 })
     }
+
+    console.log('API: Member found:', member)
 
     if (!member) {
       return NextResponse.json({ authorized: false, error: 'You are not authorized' })
