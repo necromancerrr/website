@@ -15,6 +15,8 @@ export default function CareerPortalPage() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [memberEmail, setMemberEmail] = useState<string | null>(null);
+  const [memberFirstName, setMemberFirstName] = useState<string | null>(null);
 
 
 
@@ -55,87 +57,96 @@ export default function CareerPortalPage() {
 
   // Load existing profile data
   const loadProfile = async (userEmail: string) => {
+    let profileData = null;
+
     try {
       const response = await fetch(`/api/profile?email=${encodeURIComponent(userEmail)}`);
       const result = await response.json();
 
       if (!response.ok) {
         console.error('Error loading profile:', result.error);
-        return;
-      }
-
-      const profileData = result.data;
-
-      if (profileData) {
-        // Load basic profile data
-        setProfile({
-          firstName: "",
-          lastName: "",
-          graduationDate: profileData.expected_graduation ? `${profileData.expected_graduation}-01` : "",
-          academicProgram: profileData.degree || "",
-          linkedinUrl: profileData.social_linkedin || "",
-          githubUrl: profileData.social_github || "",
-          jobSearchStatus: "open",
-          notes: profileData.notes || "",
-        });
-
-        // Load career interests
-        if (profileData.career_interests && Array.isArray(profileData.career_interests)) {
-          const interests = profileData.career_interests as string[];
-          const updatedInterests = { ...careerInterests };
-
-          // Reset all interests first
-          Object.keys(updatedInterests).forEach(key => {
-            if (key === 'engineering') {
-              Object.keys(updatedInterests.engineering).forEach(engKey => {
-                updatedInterests.engineering[engKey as keyof typeof updatedInterests.engineering] = false;
-              });
-            } else {
-              updatedInterests[key as keyof Omit<typeof updatedInterests, 'engineering'>] = false;
-            }
-          });
-
-          // Set selected interests
-          interests.forEach(interest => {
-            const interestKey = interest.toLowerCase().replace(/\s+/g, '');
-
-            // Check engineering interests
-            if (interestKey.includes('software') || interestKey.includes('engineering')) {
-              updatedInterests.engineering.softwareEngineering = true;
-            } else if (interestKey.includes('blockchain') || interestKey.includes('dev')) {
-              updatedInterests.engineering.blockchainDevelopment = true;
-            } else if (interestKey.includes('devops')) {
-              updatedInterests.engineering.devOpsEngineering = true;
-            }
-            // Check other interests
-            else if (interestKey.includes('finance')) {
-              updatedInterests.finance = true;
-            } else if (interestKey.includes('product') || interestKey.includes('management')) {
-              updatedInterests.productManagement = true;
-            } else if (interestKey.includes('data') || interestKey.includes('science')) {
-              updatedInterests.dataScience = true;
-            } else if (interestKey.includes('design') || interestKey.includes('ux')) {
-              updatedInterests.uiUxDesign = true;
-            } else if (interestKey.includes('business') || interestKey.includes('development')) {
-              updatedInterests.businessDevelopment = true;
-            } else if (interestKey.includes('research') || interestKey.includes('academia')) {
-              updatedInterests.researchAcademia = true;
-            } else if (interestKey.includes('marketing')) {
-              updatedInterests.marketing = true;
-            } else if (interestKey.includes('legal')) {
-              updatedInterests.legal = true;
-            } else if (interestKey.includes('security')) {
-              updatedInterests.security = true;
-            } else if (interestKey.includes('venture')) {
-              updatedInterests.venture = true;
-            }
-          });
-
-          setCareerInterests(updatedInterests);
-        }
+      } else {
+        profileData = result.data;
       }
     } catch (error) {
       console.error('Error loading profile:', error);
+    }
+
+    if (profileData) {
+      setProfile({
+        firstName: profileData.first_name || "",
+        lastName: profileData.last_name || "",
+        graduationDate: profileData.expected_graduation ? `${profileData.expected_graduation}-01` : "",
+        academicProgram: profileData.degree || "",
+        linkedinUrl: profileData.social_linkedin || "",
+        githubUrl: profileData.social_github || "",
+        jobSearchStatus: "open",
+        notes: profileData.notes || "",
+      });
+
+      if (profileData.career_interests && Array.isArray(profileData.career_interests)) {
+        const interests = profileData.career_interests as string[];
+        const updatedInterests = { ...careerInterests };
+
+        Object.keys(updatedInterests).forEach(key => {
+          if (key === 'engineering') {
+            Object.keys(updatedInterests.engineering).forEach(engKey => {
+              updatedInterests.engineering[engKey as keyof typeof updatedInterests.engineering] = false;
+            });
+          } else {
+            updatedInterests[key as keyof Omit<typeof updatedInterests, 'engineering'>] = false;
+          }
+        });
+
+        interests.forEach(interest => {
+          const interestKey = interest.toLowerCase().replace(/\s+/g, '');
+
+          if (interestKey.includes('software') || interestKey.includes('engineering')) {
+            updatedInterests.engineering.softwareEngineering = true;
+          } else if (interestKey.includes('blockchain') || interestKey.includes('dev')) {
+            updatedInterests.engineering.blockchainDevelopment = true;
+          } else if (interestKey.includes('devops')) {
+            updatedInterests.engineering.devOpsEngineering = true;
+          } else if (interestKey.includes('finance')) {
+            updatedInterests.finance = true;
+          } else if (interestKey.includes('product') || interestKey.includes('management')) {
+            updatedInterests.productManagement = true;
+          } else if (interestKey.includes('data') || interestKey.includes('science')) {
+            updatedInterests.dataScience = true;
+          } else if (interestKey.includes('design') || interestKey.includes('ux')) {
+            updatedInterests.uiUxDesign = true;
+          } else if (interestKey.includes('business') || interestKey.includes('development')) {
+            updatedInterests.businessDevelopment = true;
+          } else if (interestKey.includes('research') || interestKey.includes('academia')) {
+            updatedInterests.researchAcademia = true;
+          } else if (interestKey.includes('marketing')) {
+            updatedInterests.marketing = true;
+          } else if (interestKey.includes('legal')) {
+            updatedInterests.legal = true;
+          } else if (interestKey.includes('security')) {
+            updatedInterests.security = true;
+          } else if (interestKey.includes('venture')) {
+            updatedInterests.venture = true;
+          }
+        });
+
+        setCareerInterests(updatedInterests);
+      }
+    }
+
+    // Fetch first_name from members table for welcome message
+    try {
+      const { data: member } = await supabase
+        .from('members')
+        .select('first_name')
+        .eq('email', userEmail)
+        .maybeSingle();
+
+      if (member?.first_name) {
+        setMemberFirstName(member.first_name);
+      }
+    } catch (memberErr) {
+      console.error('Error fetching member first name:', memberErr);
     }
   };
 
@@ -165,6 +176,8 @@ export default function CareerPortalPage() {
         setEmail("");
         setPassword("");
         setError(null);
+        setMemberEmail(null);
+        setMemberFirstName(null);
         // Reset profile data
         setProfile({
           firstName: "",
@@ -213,11 +226,42 @@ export default function CareerPortalPage() {
   // Load profile data when Privy user authenticates
   useEffect(() => {
     if (ready && authenticated && privyUser) {
-      // Get identifier from Privy user (wallet address or email)
-      const identifier = privyUser.wallet?.address || privyUser.email?.address;
-      if (identifier) {
-        loadProfile(identifier);
-      }
+      const checkWalletAuthorization = async () => {
+        const walletAddress = privyUser.wallet?.address?.toLowerCase();
+        if (walletAddress) {
+          console.log('Checking wallet authorization for:', walletAddress);
+          
+          try {
+            const response = await fetch('/api/auth/check-wallet', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ walletAddress }),
+            });
+
+            const result = await response.json();
+            console.log('Authorization result:', result);
+
+            if (!result.authorized) {
+              setError(result.error || "You are not authorized");
+              await privyLogout();
+            } else {
+              // Store the member's email and first name for profile operations
+              if (result.member?.email) {
+                setMemberEmail(result.member.email);
+                setMemberFirstName(result.member.first_name || null);
+                console.log('Loading profile for member email:', result.member.email);
+                await loadProfile(result.member.email);
+              }
+            }
+          } catch (err) {
+            console.error('Authorization check error:', err);
+            setError("You are not authorized");
+            await privyLogout();
+          }
+        }
+      };
+
+      checkWalletAuthorization();
     }
   }, [ready, authenticated, privyUser]);
 
@@ -259,6 +303,9 @@ export default function CareerPortalPage() {
       if (authenticated) {
         await privyLogout();
       }
+      // Clear member email and first name
+      setMemberEmail(null);
+      setMemberFirstName(null);
     } catch (err) {
       console.error("Error signing out: ", err);
     }
@@ -266,6 +313,8 @@ export default function CareerPortalPage() {
 
   // Get user identifier (email from Supabase or wallet address from Privy)
   const getUserIdentifier = () => {
+    // For wallet sign-in, use the member's email from database
+    if (memberEmail) return memberEmail;
     if (user?.email) return user.email;
     if (privyUser?.wallet?.address) return privyUser.wallet.address;
     if (privyUser?.email?.address) return privyUser.email.address;
@@ -678,7 +727,7 @@ export default function CareerPortalPage() {
                 <span className="block text-electric">Profile</span>
               </h1>
               <p className="text-muted text-lg">
-                Welcome back, {session?.user.email?.split('@')[0] ||
+                Welcome back, {memberFirstName || session?.user.email?.split('@')[0] ||
                   (privyUser?.wallet?.address ? `${privyUser.wallet.address.slice(0, 6)}...${privyUser.wallet.address.slice(-4)}` :
                     privyUser?.email?.address?.split('@')[0] || 'User')}
               </p>
