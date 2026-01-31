@@ -7,6 +7,7 @@ import { usePrivy } from "@privy-io/react-auth";
 import type { Session } from "@supabase/supabase-js";
 import type { Job, CareerField } from "@/types/career";
 import { CAREER_FIELD_LABELS, CAREER_FIELD_OPTIONS } from "@/types/career";
+import { ChatbotIcon, ChatProvider } from "@/components/Chatbot";
 
 export default function JobsPage() {
   const router = useRouter();
@@ -136,32 +137,33 @@ export default function JobsPage() {
   }
 
   return (
-    <div className="min-h-screen pt-28 lg:pt-24">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-x-0 -top-24 h-64 bg-radial-fade" />
-      </div>
+    <ChatProvider>
+      <div className="min-h-screen pt-28 lg:pt-24">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute inset-x-0 -top-24 h-64 bg-radial-fade" />
+        </div>
 
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        >
-          {/* Header */}
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
-            className="text-center mb-12"
+            transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            <h1 className="font-heading text-4xl sm:text-5xl text-white leading-tight mb-4">
-              Job Opportunities
-              <span className="block text-electric">Latest Postings</span>
-            </h1>
-            <p className="text-muted text-lg">
-              Career opportunities curated for the UW Blockchain community.
-            </p>
-          </motion.div>
+            {/* Header */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
+              className="text-center mb-12"
+            >
+              <h1 className="font-heading text-4xl sm:text-5xl text-white leading-tight mb-4">
+                Job Opportunities
+                <span className="block text-electric">Latest Postings</span>
+              </h1>
+              <p className="text-muted text-lg">
+                Career opportunities curated for the UW Blockchain community.
+              </p>
+            </motion.div>
 
            {/* Filters */}
            <motion.div
@@ -239,24 +241,32 @@ export default function JobsPage() {
                  </p>
                </div>
             ) : (
-              <ul className="space-y-4">
-                {filteredJobs.map((job, index) => (
-                  <motion.li
-                    key={job.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                    className="flex items-start gap-3 py-3 border-b border-white/5 last:border-0"
-                  >
-                    <span className="text-electric mt-1 text-lg">•</span>
-                    <div className="flex-1">
-                      <div className="text-white">
-                        {job.company && <span className="font-semibold">{job.company}</span>}
-                        {job.company && job.position && " is hiring "}
-                        {job.position && <span className="font-medium">{job.position}</span>}
-                        {!job.company && !job.position && "Job opportunity"}
-                      </div>
-                      
+               <ul className="space-y-4">
+                 {filteredJobs.map((job, index) => (
+                   <motion.li
+                     key={job.id}
+                     initial={{ opacity: 0, x: -20 }}
+                     animate={{ opacity: 1, x: 0 }}
+                     transition={{ duration: 0.3, delay: index * 0.05 }}
+                     className="flex items-start gap-3 py-3 border-b border-white/5 last:border-0"
+                   >
+                     <span className="text-electric mt-1 text-lg">•</span>
+                     <div className="flex-1">
+                       <div className="flex items-center gap-2 flex-wrap">
+                         <div className="text-white">
+                           {job.company && <span className="font-semibold">{job.company}</span>}
+                           {job.company && job.position && " is hiring "}
+                           {job.position && <span className="font-medium">{job.position}</span>}
+                           {!job.company && !job.position && "Job opportunity"}
+                         </div>
+                          <ChatbotIcon
+                            jobId={job.id?.toString() || ''}
+                            jobTitle={job.position || 'Job Opportunity'}
+                            jobCompany={job.company || ''}
+                            jobPostingUrl={job.job_posting_url}
+                          />
+                       </div>
+
                        {/* Career Field Tags */}
                        {job.career_fields && job.career_fields.length > 0 && (
                          <div className="flex flex-wrap gap-1 mt-2">
@@ -281,49 +291,50 @@ export default function JobsPage() {
                        )}
 
                        <div className="flex items-center gap-4 mt-2">
-                        <a
-                          href={job.job_posting_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-electric hover:opacity-80 text-sm transition-opacity"
-                        >
-                          Apply here →
-                        </a>
-                        {job.experience_level && (
-                          <span className="px-2 py-1 bg-white/10 rounded text-xs text-muted">
-                            {job.experience_level}
-                          </span>
-                        )}
-                      </div>
-                      {job.notes && (
-                        <div className="mt-2 text-sm text-muted bg-white/5 rounded p-2">
-                          <strong>Note:</strong> {job.notes}
-                        </div>
-                      )}
-                      <div className="mt-2 text-xs text-muted">
-                        Posted {new Date(job.created_at).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </motion.li>
-                ))}
-              </ul>
+                         <a
+                           href={job.job_posting_url}
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           className="text-electric hover:opacity-80 text-sm transition-opacity"
+                         >
+                           Apply here →
+                         </a>
+                         {job.experience_level && (
+                           <span className="px-2 py-1 bg-white/10 rounded text-xs text-muted">
+                             {job.experience_level}
+                           </span>
+                         )}
+                       </div>
+                       {job.notes && (
+                         <div className="mt-2 text-sm text-muted bg-white/5 rounded p-2">
+                           <strong>Note:</strong> {job.notes}
+                         </div>
+                       )}
+                       <div className="mt-2 text-xs text-muted">
+                         Posted {new Date(job.created_at).toLocaleDateString()}
+                       </div>
+                     </div>
+                   </motion.li>
+                 ))}
+               </ul>
             )}
            </motion.div>
 
-           {/* Stats */}
-           <motion.div
-             initial={{ opacity: 0, y: 8 }}
-             animate={{ opacity: 1, y: 0 }}
-             transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
-             className="mt-8 text-center"
-           >
-             <p className="text-muted text-sm">
-               {filteredJobs.length} job{filteredJobs.length !== 1 ? 's' : ''}
-               {(selectedFields.length > 0 || showReferralOnly) && ` (filtered from ${jobs.length})`}
-             </p>
-           </motion.div>
-         </motion.div>
-       </div>
-     </div>
-   );
+            {/* Stats */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+              className="mt-8 text-center"
+            >
+              <p className="text-muted text-sm">
+                {filteredJobs.length} job{filteredJobs.length !== 1 ? 's' : ''}
+                {(selectedFields.length > 0 || showReferralOnly) && ` (filtered from ${jobs.length})`}
+              </p>
+            </motion.div>
+          </motion.div>
+        </div>
+      </div>
+    </ChatProvider>
+  );
 }
