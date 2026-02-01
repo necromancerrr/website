@@ -3,10 +3,13 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 
 // Floating, transparent navbar that overlays the hero with mobile full-screen menu
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const isCareerPortal = pathname?.startsWith('/career-portal');
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -44,20 +47,25 @@ export default function Navbar() {
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-10 text-white font-medium">
-          <Link href="https://uwfintech.org/" target="_blank" className="hover:text-[rgb(183,148,244)]">Research</Link>
-          <Link href="/engineering" className="hover:text-[rgb(183,148,244)]">Engineering</Link>
+          {!isCareerPortal && (
+            <>
+              <Link href="https://uwfintech.org/" target="_blank" className="hover:text-[rgb(183,148,244)]">Research</Link>
+              <Link href="/engineering" className="hover:text-[rgb(183,148,244)]">Engineering</Link>
+              <Link href="/career-portal">Career Portal</Link>
 
-          <Link
-            href="https://docs.google.com/forms/d/e/1FAIpQLSfxNK9CgnIwdQzpx3_ckLAjJc6RiyTZjzjYjmnLAaxzpDpYXA/viewform?usp=dialog"
-            target="_blank"
-            className="text-white px-5 py-2 rounded-full font-semibold transition-opacity hover:opacity-95"
-            style={{
-              backgroundImage: "linear-gradient(117.96deg, #6f58da, #5131e7)",
-              boxShadow: "0 8px 24px rgba(111, 88, 218, 0.45)",
-            }}
-          >
-            Apply
-          </Link>
+              <Link
+                href="https://docs.google.com/forms/d/e/1FAIpQLSfxNK9CgnIwdQzpx3_ckLAjJc6RiyTZjzjYjmnLAaxzpDpYXA/viewform?usp=dialog"
+                target="_blank"
+                className="text-white px-5 py-2 rounded-full font-semibold transition-opacity hover:opacity-95"
+                style={{
+                  backgroundImage: "linear-gradient(117.96deg, #6f58da, #5131e7)",
+                  boxShadow: "0 8px 24px rgba(111, 88, 218, 0.45)",
+                }}
+              >
+                Apply
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Hamburger */}
@@ -93,21 +101,25 @@ export default function Navbar() {
           </svg>
         </button>
 
-        <Link href="https://uwfintech.org/" target="_blank" onClick={() => setOpen(false)} className="hover:text-[rgb(183,148,244)] transition-colors">Research</Link>
-        <Link href="/engineering" onClick={() => setOpen(false)} className="hover:text-[rgb(183,148,244)] transition-colors">Engineering</Link>
+        {!isCareerPortal && (
+          <>
+            <Link href="https://uwfintech.org/" target="_blank" onClick={() => setOpen(false)} className="hover:text-[rgb(183,148,244)] transition-colors">Research</Link>
+            <Link href="/engineering" onClick={() => setOpen(false)} className="hover:text-[rgb(183,148,244)] transition-colors">Engineering</Link>
 
-        <Link
-          href="https://docs.google.com/forms/d/e/1FAIpQLSfxNK9CgnIwdQzpx3_ckLAjJc6RiyTZjzjYjmnLAaxzpDpYXA/viewform?usp=dialog"
-          target="_blank"
-          onClick={() => setOpen(false)}
-          className="text-white px-6 py-3 rounded-full mt-6 text-xl font-semibold transition-opacity hover:opacity-95"
-          style={{
-            backgroundImage: "linear-gradient(117.96deg, #6f58da, #5131e7)",
-            boxShadow: "0 8px 24px rgba(111, 88, 218, 0.45)",
-          }}
-        >
-          Apply
-        </Link>
+            <Link
+              href="https://docs.google.com/forms/d/e/1FAIpQLSfxNK9CgnIwdQzpx3_ckLAjJc6RiyTZjzjYjmnLAaxzpDpYXA/viewform?usp=dialog"
+              target="_blank"
+              onClick={() => setOpen(false)}
+              className="text-white px-6 py-3 rounded-full mt-6 text-xl font-semibold transition-opacity hover:opacity-95"
+              style={{
+                backgroundImage: "linear-gradient(117.96deg, #6f58da, #5131e7)",
+                boxShadow: "0 8px 24px rgba(111, 88, 218, 0.45)",
+              }}
+            >
+              Apply
+            </Link>
+          </>
+        )}
       </div>
     </>
   );
