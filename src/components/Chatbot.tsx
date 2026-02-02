@@ -133,10 +133,6 @@ export function ChatProvider({ children }: ChatProviderProps) {
         body: JSON.stringify({
           message: input,
           jobPostingUrl: activeJob.postingUrl,
-          context:
-            activeJob.title && activeJob.company
-              ? `Job: ${activeJob.title} at ${activeJob.company}`
-              : undefined,
         }),
       });
 

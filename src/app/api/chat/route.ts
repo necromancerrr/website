@@ -13,16 +13,12 @@ function logError(...args: unknown[]) {
 }
 
 export async function POST(request: NextRequest) {
-  const requestId = crypto.randomUUID().slice(0, 8);
-  log(`[${requestId}] Incoming request`);
 
   try {
     const body = await request.json();
-    log(`[${requestId}] Raw body keys:`, Object.keys(body));
 
     let userMessage = "";
     let jobPostingUrl = "";
-    let context = "";
 
     if (body.messages && Array.isArray(body.messages) && body.messages.length > 0) {
       const firstMessage = body.messages[0];
@@ -37,25 +33,18 @@ export async function POST(request: NextRequest) {
     }
 
     jobPostingUrl = body.jobPostingUrl || body.data?.jobPostingUrl || "";
-    context = body.context || body.data?.context || "";
-
-    log(`[${requestId}] Message:`, userMessage);
-    log(`[${requestId}] jobPostingUrl:`, jobPostingUrl);
 
     if (!userMessage) {
       return NextResponse.json({ error: "Message is required" }, { status: 400 });
     }
 
-    let jobContent = "";
+    let _scrapedJobFromWebsite = "";
 
     if (jobPostingUrl) {
-      log(`[${requestId}] Scraping via MCP: ${jobPostingUrl}`);
       try {
-        jobContent = await scrapeViaMCP(jobPostingUrl);
-        log(`[${requestId}] Job content length:`, jobContent.length);
+        _scrapedJobFromWebsite = await scrapeViaMCP(jobPostingUrl);
       } catch (error) {
-        logError(`[${requestId}] MCP scrape failed:`, error);
-        jobContent = `Could not retrieve job posting content from ${jobPostingUrl}`;
+        _scrapedJobFromWebsite = `Could not retrieve job posting content from ${jobPostingUrl}`;
       }
     } else {
       logError("job posting URL not found!")
@@ -63,8 +52,7 @@ export async function POST(request: NextRequest) {
 
     const systemPrompt = `You are a helpful career assistant helping users understand job opportunities.
 
-${jobContent ? `Here is the job posting content:\n\n${jobContent}\n\n` : ""}
-${context ? `Additional context: ${context}\n\n` : ""}
+${_scrapedJobFromWebsite ? `Here is the job posting content:\n\n${_scrapedJobFromWebsite}\n\n` : ""}
 
 Provide helpful, accurate information about the job. If you couldn't retrieve the full job posting, suggest visiting the original posting URL.
 
@@ -94,22 +82,16 @@ Keep your responses concise and focused on helping the user understand the role,
       }),
     });
 
-    log(`[${requestId}] AI response status:`, response.status);
-    log(`[${requestId}] AI response headers:`, Object.fromEntries(response.headers.entries()));
-
     if (!response.ok) {
       const errorText = await response.text();
-      logError(`[${requestId}] NEAR AI API error:`, errorText);
+      console.log(errorText);
       return NextResponse.json({ error: "Failed to get AI response" }, { status: 500 });
     }
 
     const data = await response.json();
-    log(`[${requestId}] AI response keys:`, Object.keys(data));
-    log(`[${requestId}] AI response preview:`, JSON.stringify(data).slice(0, 500));
 
     const message = data.choices?.[0]?.message;
     const reply = message?.content || message?.reasoning || "I couldn't generate a response.";
-    log(`[${requestId}] Reply:`, typeof reply === "string" ? reply.slice(0, 200) : "object");
 
     const messageId = crypto.randomUUID();
 
@@ -129,7 +111,6 @@ Keep your responses concise and focused on helping the user understand the role,
       ],
     });
   } catch (error) {
-    logError(`[${requestId}] Chat error:`, error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
