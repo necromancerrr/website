@@ -57,6 +57,8 @@ export async function POST(request: NextRequest) {
         logError(`[${requestId}] MCP scrape failed:`, error);
         jobContent = `Could not retrieve job posting content from ${jobPostingUrl}`;
       }
+    } else {
+      logError("job posting URL not found!")
     }
 
     const systemPrompt = `You are a helpful career assistant helping users understand job opportunities.
@@ -140,8 +142,6 @@ async function scrapeViaMCP(url: string): Promise<string> {
   if (!mcpToken) {
     throw new Error("BRIGHT_DATA_MCP_TOKEN not configured");
   }
-
-  log(`[scrapeViaMCP] Token prefix:`, mcpToken.slice(0, 8) + "...");
 
   const mcpUrl = `https://mcp.brightdata.com/mcp?token=${mcpToken}`;
 
