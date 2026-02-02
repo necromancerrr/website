@@ -1049,6 +1049,11 @@ export default function ManageJobsPage() {
                                 {job.experience_level}
                               </span>
                             )}
+                            {job.referral_available && (
+                              <span className="ml-2 px-2 py-1 bg-green-500/20 border border-green-500/30 rounded text-xs text-green-400 font-medium">
+                                Referral Available
+                              </span>
+                            )}
                             {job.career_fields && job.career_fields.length > 0 && (
                               <div className="flex flex-wrap gap-1 mt-2">
                                 {job.career_fields.map((field) => (
