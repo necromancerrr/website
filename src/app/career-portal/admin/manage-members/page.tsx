@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/api/supabase";
 import type { User, Session } from "@supabase/supabase-js";
-import { Plus, X, ArrowLeft } from "lucide-react";
+import { Plus, X, ArrowLeft, Search } from "lucide-react";
 
 interface Member {
   id: string;
@@ -37,6 +37,9 @@ export default function ManageMembersPage() {
   const [editLastName, setEditLastName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editWalletAddress, setEditWalletAddress] = useState("");
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Check for existing session and authorization
   useEffect(() => {
@@ -655,10 +658,20 @@ export default function ManageMembersPage() {
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
             className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-6 accent-glow"
           >
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <h2 className="text-xl font-semibold text-white">
                 Members ({members.length})
               </h2>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+                <input
+                  type="text"
+                  placeholder="Search by name..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full sm:w-64 pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors text-sm"
+                />
+              </div>
             </div>
 
             <div className="overflow-x-auto">
@@ -674,14 +687,20 @@ export default function ManageMembersPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {members.length === 0 ? (
+                  {members.filter(member => {
+                    const fullName = `${member.first_name} ${member.last_name}`.toLowerCase();
+                    return fullName.includes(searchQuery.toLowerCase());
+                  }).length === 0 ? (
                     <tr>
                       <td colSpan={6} className="text-center py-8 text-muted">
-                        No members found.
+                        {searchQuery ? "No members found matching your search." : "No members found."}
                       </td>
                     </tr>
                   ) : (
-                    members.map((member) => (
+                    members.filter(member => {
+                      const fullName = `${member.first_name} ${member.last_name}`.toLowerCase();
+                      return fullName.includes(searchQuery.toLowerCase());
+                    }).map((member) => (
                       <tr key={member.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                         <td className="py-4 px-4">
                           <div className="text-white font-medium">

@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/api/supabase";
-import { Plus, ArrowLeft } from "lucide-react";
+import { Plus, ArrowLeft, Search, ArrowUpDown } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
 import type { Job, CareerField } from "@/types/career";
 import { CAREER_FIELD_OPTIONS, CAREER_FIELD_LABELS } from "@/types/career";
@@ -31,6 +31,10 @@ export default function ManageJobsPage() {
   });
   const [formError, setFormError] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
+
+  // Search and sort state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
 
   const stats = {
     total: jobs.length,
@@ -933,92 +937,136 @@ export default function ManageJobsPage() {
           )}
 
           {/* Jobs List */}
-          {jobs.length > 0 ? (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
-              className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-6 accent-glow"
-            >
-              <h2 className="text-xl font-semibold text-white mb-6">
-                Current Job Postings ({jobs.length})
-              </h2>
-              <div className="space-y-4">
-                {jobs.map((job) => (
-                  <div
-                    key={job.id}
-                    className="bg-white/5 border border-white/10 rounded-lg p-4 hover:bg-white/10 transition-colors"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="text-white font-semibold mb-1">
-                          {job.position || "Untitled Position"}
-                        </h3>
-                        <p className="text-muted mb-2">{job.company || "Unknown Company"}</p>
-                        <a
-                          href={job.job_posting_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-electric hover:opacity-80 text-sm transition-opacity"
-                        >
-                          View Job Posting →
-                        </a>
-                        {job.experience_level && (
-                          <span className="ml-4 px-2 py-1 bg-white/10 rounded text-xs text-muted">
-                            {job.experience_level}
-                          </span>
-                        )}
-                        {job.career_fields && job.career_fields.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {job.career_fields.map((field) => (
-                              <span
-                                key={field}
-                                className="px-2 py-0.5 bg-electric/20 text-electric text-xs rounded-full"
-                              >
-                                {CAREER_FIELD_LABELS[field]}
+          {(() => {
+            const filteredJobs = jobs.filter(job => {
+              const company = (job.company || "").toLowerCase();
+              const position = (job.position || "").toLowerCase();
+              const query = searchQuery.toLowerCase();
+              return company.includes(query) || position.includes(query);
+            }).sort((a, b) => {
+              const dateA = new Date(a.created_at).getTime();
+              const dateB = new Date(b.created_at).getTime();
+              return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+            });
+
+            if (jobs.length === 0) {
+              return (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+                  className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-12 accent-glow text-center"
+                >
+                  <p className="text-muted text-lg mb-2">No job postings yet</p>
+                  <p className="text-sm text-muted">Create your first job posting to get started.</p>
+                </motion.div>
+              );
+            }
+
+            return (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+                className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-6 accent-glow"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                  <h2 className="text-xl font-semibold text-white">
+                    Current Job Postings ({filteredJobs.length})
+                  </h2>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+                      <input
+                        type="text"
+                        placeholder="Search company or position..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full sm:w-64 pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors text-sm"
+                      />
+                    </div>
+                    <button
+                      onClick={() => setSortOrder(sortOrder === "newest" ? "oldest" : "newest")}
+                      className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-colors text-sm"
+                    >
+                      <ArrowUpDown className="w-4 h-4" />
+                      {sortOrder === "newest" ? "Newest Posted Date" : "Oldest Posted Date"}
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  {filteredJobs.length === 0 ? (
+                    <div className="text-center py-8 text-muted">
+                      {searchQuery ? "No jobs found matching your search." : "No jobs found."}
+                    </div>
+                  ) : (
+                    filteredJobs.map((job) => (
+                      <div
+                        key={job.id}
+                        className="bg-white/5 border border-white/10 rounded-lg p-4 hover:bg-white/10 transition-colors"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h3 className="text-white font-semibold mb-1">
+                              {job.position || "Untitled Position"}
+                            </h3>
+                            <p className="text-muted mb-2">{job.company || "Unknown Company"}</p>
+                            <a
+                              href={job.job_posting_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-electric hover:opacity-80 text-sm transition-opacity"
+                            >
+                              View Job Posting →
+                            </a>
+                            {job.experience_level && (
+                              <span className="ml-4 px-2 py-1 bg-white/10 rounded text-xs text-muted">
+                                {job.experience_level}
                               </span>
-                            ))}
+                            )}
+                            {job.career_fields && job.career_fields.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {job.career_fields.map((field) => (
+                                  <span
+                                    key={field}
+                                    className="px-2 py-0.5 bg-electric/20 text-electric text-xs rounded-full"
+                                  >
+                                    {CAREER_FIELD_LABELS[field]}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 ml-4">
+                            <button
+                              onClick={() => startEditJob(job)}
+                              className="px-3 py-1 bg-electric/10 border border-electric/20 text-electric rounded hover:bg-electric/20 transition-colors text-sm"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteJob(job.id)}
+                              className="px-3 py-1 bg-red-500/10 border border-red-500/20 text-red-400 rounded hover:bg-red-500/20 transition-colors text-sm"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                        {job.notes && (
+                          <div className="mt-2 text-sm text-muted bg-white/5 rounded p-2">
+                            <strong>Note:</strong> {job.notes}
                           </div>
                         )}
+                        <div className="mt-3 text-xs text-muted">
+                          Posted {new Date(job.created_at).toLocaleDateString()}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 ml-4">
-                        <button
-                          onClick={() => startEditJob(job)}
-                          className="px-3 py-1 bg-electric/10 border border-electric/20 text-electric rounded hover:bg-electric/20 transition-colors text-sm"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteJob(job.id)}
-                          className="px-3 py-1 bg-red-500/10 border border-red-500/20 text-red-400 rounded hover:bg-red-500/20 transition-colors text-sm"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                    {job.notes && (
-                      <div className="mt-2 text-sm text-muted bg-white/5 rounded p-2">
-                        <strong>Note:</strong> {job.notes}
-                      </div>
-                    )}
-                    <div className="mt-3 text-xs text-muted">
-                      Posted {new Date(job.created_at).toLocaleDateString()}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
-              className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-12 accent-glow text-center"
-            >
-              <p className="text-muted text-lg mb-2">No job postings yet</p>
-              <p className="text-sm text-muted">Create your first job posting to get started.</p>
-            </motion.div>
-          )}
+                    ))
+                  )}
+                </div>
+              </motion.div>
+            );
+          })()}
         </motion.div>
       </div>
     </div>
