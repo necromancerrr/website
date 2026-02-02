@@ -6,7 +6,7 @@ import { usePrivy } from "@privy-io/react-auth";
 import type { Session } from "@supabase/supabase-js";
 import type { Job, CareerField } from "@/types/career";
 import { CAREER_FIELD_LABELS, CAREER_FIELD_OPTIONS } from "@/types/career";
-import { Search, ExternalLink, ChevronDown, ArrowUpDown } from "lucide-react";
+import { Search, ExternalLink, ChevronDown, ArrowUpDown, ArrowLeft } from "lucide-react";
 
 export default function JobsPage() {
   const router = useRouter();
@@ -130,6 +130,16 @@ export default function JobsPage() {
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <header className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <button
+              onClick={() => router.push("/career-portal")}
+              className="group flex items-center gap-1.5 text-zinc-400 hover:text-white text-sm transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+              <span>Back</span>
+            </button>
+          </div>
+          
           <div className="flex items-baseline justify-between mb-4">
             <h1 className="text-xl font-medium text-white">
               UW Blockchain Jobs

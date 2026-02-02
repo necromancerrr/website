@@ -1,10 +1,10 @@
 "use client";
 import type { Session } from "@supabase/supabase-js";
-import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/api/supabase";
 import { usePrivy } from "@privy-io/react-auth";
+import { Briefcase, User, LogOut, ChevronRight, Wallet } from "lucide-react";
 
 export default function CareerPortalPage() {
   const router = useRouter();
@@ -17,8 +17,6 @@ export default function CareerPortalPage() {
   const [error, setError] = useState<string | null>(null);
   const [memberEmail, setMemberEmail] = useState<string | null>(null);
   const [memberFirstName, setMemberFirstName] = useState<string | null>(null);
-
-
 
   // Profile state
   const [profile, setProfile] = useState({
@@ -35,25 +33,46 @@ export default function CareerPortalPage() {
   // Career interests state
   const [careerInterests, setCareerInterests] = useState({
     engineering: {
-      softwareEngineering: false,
-      blockchainDevelopment: false,
-      devOpsEngineering: false,
+      softwareengineering: false,
+      blockchaindevelopment: false,
+      devopsengineering: false,
     },
     finance: false,
-    productManagement: false,
-    dataScience: false,
-    uiUxDesign: false,
-    businessDevelopment: false,
-    researchAcademia: false,
+    productmanagement: false,
+    datascience: false,
+    uiuxdesign: false,
+    businessdevelopment: false,
+    researchacademia: false,
     marketing: false,
     legal: false,
     security: false,
     venture: false,
   });
 
-
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"overview" | "profile">("overview");
+
+  // Helper function to format career interest keys for display
+  const formatCareerInterest = (key: string): string => {
+    // Add space before common words
+    return key
+      .replace(/engineering/g, ' engineering')
+      .replace(/development/g, ' development')
+      .replace(/management/g, ' management')
+      .replace(/science/g, ' science')
+      .replace(/design/g, ' design')
+      .replace(/academia/g, ' academia')
+      .replace(/business/g, 'business ')
+      .replace(/research/g, 'research ')
+      .replace(/product/g, 'product ')
+      .replace(/data/g, 'data ')
+      .replace(/software/g, 'software ')
+      .replace(/blockchain/g, 'blockchain ')
+      .replace(/devops/g, 'devops ')
+      .replace(/uiux/g, 'UI/UX ')
+      .trim();
+  };
 
   // Load existing profile data
   const loadProfile = async (userEmail: string) => {
@@ -102,23 +121,23 @@ export default function CareerPortalPage() {
           const interestKey = interest.toLowerCase().replace(/\s+/g, '');
 
           if (interestKey.includes('software') || interestKey.includes('engineering')) {
-            updatedInterests.engineering.softwareEngineering = true;
+            updatedInterests.engineering.softwareengineering = true;
           } else if (interestKey.includes('blockchain') || interestKey.includes('dev')) {
-            updatedInterests.engineering.blockchainDevelopment = true;
+            updatedInterests.engineering.blockchaindevelopment = true;
           } else if (interestKey.includes('devops')) {
-            updatedInterests.engineering.devOpsEngineering = true;
+            updatedInterests.engineering.devopsengineering = true;
           } else if (interestKey.includes('finance')) {
             updatedInterests.finance = true;
           } else if (interestKey.includes('product') || interestKey.includes('management')) {
-            updatedInterests.productManagement = true;
+            updatedInterests.productmanagement = true;
           } else if (interestKey.includes('data') || interestKey.includes('science')) {
-            updatedInterests.dataScience = true;
+            updatedInterests.datascience = true;
           } else if (interestKey.includes('design') || interestKey.includes('ux')) {
-            updatedInterests.uiUxDesign = true;
+            updatedInterests.uiuxdesign = true;
           } else if (interestKey.includes('business') || interestKey.includes('development')) {
-            updatedInterests.businessDevelopment = true;
+            updatedInterests.businessdevelopment = true;
           } else if (interestKey.includes('research') || interestKey.includes('academia')) {
-            updatedInterests.researchAcademia = true;
+            updatedInterests.researchacademia = true;
           } else if (interestKey.includes('marketing')) {
             updatedInterests.marketing = true;
           } else if (interestKey.includes('legal')) {
@@ -191,16 +210,16 @@ export default function CareerPortalPage() {
         });
         setCareerInterests({
           engineering: {
-            softwareEngineering: false,
-            blockchainDevelopment: false,
-            devOpsEngineering: false,
+            softwareengineering: false,
+            blockchaindevelopment: false,
+            devopsengineering: false,
           },
           finance: false,
-          productManagement: false,
-          dataScience: false,
-          uiUxDesign: false,
-          businessDevelopment: false,
-          researchAcademia: false,
+          productmanagement: false,
+          datascience: false,
+          uiuxdesign: false,
+          businessdevelopment: false,
+          researchacademia: false,
           marketing: false,
           legal: false,
           security: false,
@@ -324,149 +343,104 @@ export default function CareerPortalPage() {
   // Check if user is authenticated via either method
   const isAuthenticated = user || (ready && authenticated);
 
+  // Get display name
+  const displayName = memberFirstName || 
+    session?.user.email?.split('@')[0] ||
+    (privyUser?.wallet?.address ? `${privyUser.wallet.address.slice(0, 6)}...${privyUser.wallet.address.slice(-4)}` :
+      privyUser?.email?.address?.split('@')[0] || 'User');
+
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen pt-28 lg:pt-24">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute inset-x-0 -top-24 h-64 bg-radial-fade" />
-        </div>
+      <div className="min-h-screen pt-24 px-4">
+        <div className="max-w-md mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-xl font-medium text-white mb-2">
+              Career Portal
+            </h1>
+            <p className="text-sm text-zinc-400">
+              Sign in to access opportunities and manage your profile.
+            </p>
+          </div>
 
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="flex flex-col items-center justify-center min-h-[calc(100vh-8rem)]"
-          >
-            <div className="w-full max-w-md">
-              <div className="text-center mb-8">
-                <h1 className="font-heading text-4xl sm:text-5xl text-white leading-tight mb-4">
-                  Career Portal
-                  <span className="block text-electric">Sign In</span>
-                </h1>
-                <p className="text-muted text-lg">
-                  Access exclusive opportunities and connect with industry
-                  partners.
-                </p>
+          {/* Sign In Form */}
+          <div className="bg-zinc-900/30 border border-zinc-800/50 rounded-lg p-6">
+            {error && (
+              <div className="mb-4 p-3 rounded bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSignIn} className="space-y-4">
+              <div>
+                <label className="block text-xs text-zinc-500 mb-1.5">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3 py-2 bg-zinc-900/50 border border-zinc-800 rounded text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500/50 transition-colors"
+                  placeholder="your.email@uw.edu"
+                  required
+                />
               </div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-                className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-8 accent-glow"
+              <div>
+                <label className="block text-xs text-zinc-500 mb-1.5">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-3 py-2 bg-zinc-900/50 border border-zinc-800 rounded text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500/50 transition-colors"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full px-4 py-2.5 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded transition-colors"
               >
-                <form onSubmit={handleSignIn} className="space-y-6">
-                  {error && (
-                    <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-                      {error}
-                    </div>
-                  )}
+                {loading ? "Signing in..." : "Sign in"}
+              </button>
+            </form>
 
-                  <div>
-                    <label
-                      htmlFor="email"
-                      className="block text-sm font-medium text-white mb-2"
-                    >
-                      Email
-                    </label>
-                    <input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
-                      placeholder="your.email@uw.edu"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="password"
-                      className="block text-sm font-medium text-white mb-2"
-                    >
-                      Password
-                    </label>
-                    <input
-                      id="password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
-                      placeholder="••••••••"
-                      required
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 bg-white/5 border border-white/10 rounded focus:ring-electric focus:border-electric"
-                      />
-                      <span className="ml-2 text-sm text-muted">
-                        Remember me
-                      </span>
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => router.push("/reset-password")}
-                      className="text-sm text-electric hover:text-electric-alt transition-colors"
-                    >
-                      Forgot password?
-                    </button>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full rounded-full text-white px-6 py-3 font-semibold transition-opacity hover:opacity-95 disabled:opacity-50"
-                    style={{
-                      backgroundImage:
-                        "linear-gradient(117.96deg, #6f58da, #5131e7)",
-                      boxShadow: "0 8px 24px rgba(111, 88, 218, 0.45)",
-                    }}
-                  >
-                    {loading ? "Signing In..." : "Sign In"}
-                  </button>
-                </form>
-
-                {/* Divider */}
-                <div className="flex items-center my-6">
-                  <div className="flex-1 border-t border-white/10"></div>
-                  <span className="px-4 text-muted text-sm">or</span>
-                  <div className="flex-1 border-t border-white/10"></div>
-                </div>
-
-                {/* Wallet Connect Button */}
-                <button
-                  type="button"
-                  onClick={() => privyLogin()}
-                  disabled={!ready}
-                  className="w-full rounded-full text-white px-6 py-3 font-semibold transition-all hover:scale-[1.02] disabled:opacity-50 bg-white/10 border border-white/20 hover:bg-white/15 flex items-center justify-center gap-3"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect width="20" height="14" x="2" y="5" rx="2" />
-                    <path d="M2 10h20" />
-                  </svg>
-                  {ready ? "Connect Wallet" : "Loading..."}
-                </button>
-
-                <div className="mt-6 text-center">
-                  <p className="text-muted text-sm">
-                    Don't have an account?{" "}
-                    <a
-                      href="#"
-                      className="text-electric hover:text-electric-alt transition-colors"
-                    >
-                      Request access
-                    </a>
-                  </p>
-                </div>
-              </motion.div>
+            {/* Divider */}
+            <div className="flex items-center my-6">
+              <div className="flex-1 border-t border-zinc-800"></div>
+              <span className="px-3 text-xs text-zinc-600">or</span>
+              <div className="flex-1 border-t border-zinc-800"></div>
             </div>
-          </motion.div>
+
+            {/* Wallet Connect */}
+            <button
+              type="button"
+              onClick={() => privyLogin()}
+              disabled={!ready}
+              className="w-full px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-white text-sm font-medium rounded border border-zinc-700 transition-colors flex items-center justify-center gap-2"
+            >
+              <Wallet className="w-4 h-4" />
+              {ready ? "Connect wallet" : "Loading..."}
+            </button>
+
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                onClick={() => router.push("/reset-password")}
+                className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+              >
+                Forgot password?
+              </button>
+            </div>
+          </div>
+
+          <p className="mt-6 text-center text-xs text-zinc-600">
+            Need access? Contact the UW Blockchain team.
+          </p>
         </div>
       </div>
     );
@@ -483,19 +457,19 @@ export default function CareerPortalPage() {
       // Check engineering interests
       Object.entries(careerInterests.engineering).forEach(([key, value]) => {
         if (value) {
-          selectedInterests.push(key.replace(/([A-Z])/g, ' $1').trim());
+          selectedInterests.push(formatCareerInterest(key));
         }
       });
 
       // Check other interests
       Object.entries(careerInterests).forEach(([key, value]) => {
         if (key !== 'engineering' && value) {
-          selectedInterests.push(key.replace(/([A-Z])/g, ' $1').trim());
+          selectedInterests.push(formatCareerInterest(key));
         }
       });
 
       const profileData = {
-        email: getUserIdentifier(), // Use wallet address or email from Privy/Supabase
+        email: getUserIdentifier(),
         expected_graduation: profile.graduationDate ? new Date(profile.graduationDate).getFullYear() : null,
         degree: profile.academicProgram,
         career_interests: selectedInterests,
@@ -504,7 +478,6 @@ export default function CareerPortalPage() {
         notes: profile.notes,
       };
 
-      // Call API endpoint
       const response = await fetch('/api/profile', {
         method: 'POST',
         headers: {
@@ -519,254 +492,257 @@ export default function CareerPortalPage() {
         throw new Error(result.error || 'Failed to save profile');
       }
 
-      setSaveMessage("Profile saved successfully!");
+      setSaveMessage("Profile saved successfully");
     } catch (error) {
       console.error('Error saving profile:', error);
-      setSaveMessage("Error saving profile. Please try again.");
+      setSaveMessage("Failed to save profile");
     } finally {
       setIsSaving(false);
       setTimeout(() => setSaveMessage(null), 3000);
     }
   };
 
-
-
-  const renderProfileTab = () => (
-    <div className="space-y-8">
-      {/* Personal Information */}
-      <div>
-        <h3 className="text-xl font-semibold text-white mb-4">Personal Information</h3>
-        <label className="block text-sm text-white mb-4">
-          Filling this is optional. We will use these data to understand our club demography better.
-        </label>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">
-              Email
-            </label>
-            <input
-              type="email"
-              value={session?.user.email || ""}
-              disabled
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-muted cursor-not-allowed"
-              readOnly
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">
-              Expected Graduation
-            </label>
-            <input
-              type="month"
-              value={profile.graduationDate}
-              onChange={(e) => setProfile({ ...profile, graduationDate: e.target.value })}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
-            />
-          </div>
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-white mb-2">
-              Degree
-            </label>
-            <input
-              type="text"
-              value={profile.academicProgram}
-              onChange={(e) => setProfile({ ...profile, academicProgram: e.target.value })}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
-              placeholder="e.g., Computer Science, Business Administration"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Career Interests */}
-      <div>
-        <h3 className="text-xl font-semibold text-white mb-4">Career Interests</h3>
-        <div className="space-y-4">
-          <div>
-            <h4 className="text-sm font-medium text-white mb-2">Engineering</h4>
-            <div className="space-y-2">
-              {Object.entries(careerInterests.engineering).map(([key, value]) => (
-                <label key={key} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={value}
-                    onChange={(e) =>
-                      setCareerInterests({
-                        ...careerInterests,
-                        engineering: {
-                          ...careerInterests.engineering,
-                          [key]: e.target.checked,
-                        },
-                      })
-                    }
-                    className="w-4 h-4 bg-white/5 border border-white/10 rounded focus:ring-electric focus:border-electric"
-                  />
-                  <span className="ml-2 text-sm text-white capitalize">
-                    {key.replace(/([A-Z])/g, ' $1').trim()}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-medium text-white mb-2">Other Interests</h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {Object.entries(careerInterests).filter(([key]) => key !== 'engineering').map(([key, value]) => (
-                <label key={key} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={typeof value === 'boolean' ? value : false}
-                    onChange={(e) =>
-                      setCareerInterests({
-                        ...careerInterests,
-                        [key]: e.target.checked,
-                      })
-                    }
-                    className="w-4 h-4 bg-white/5 border border-white/10 rounded focus:ring-electric focus:border-electric"
-                  />
-                  <span className="ml-2 text-sm text-white capitalize">
-                    {key.replace(/([A-Z])/g, ' $1').trim()}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-
-
-      {/* Additional Information */}
-      <div>
-        <h3 className="text-xl font-semibold text-white mb-4">Additional Information</h3>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">
-              LinkedIn Profile URL (Optional)
-            </label>
-            <input
-              type="url"
-              value={profile.linkedinUrl}
-              onChange={(e) => setProfile({ ...profile, linkedinUrl: e.target.value })}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
-              placeholder="https://linkedin.com/in/yourprofile"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">
-              GitHub/Portfolio URL (Optional)
-            </label>
-            <input
-              type="url"
-              value={profile.githubUrl}
-              onChange={(e) => setProfile({ ...profile, githubUrl: e.target.value })}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
-              placeholder="https://github.com/yourusername"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">
-              Notes (Optional)
-            </label>
-            <textarea
-              value={profile.notes}
-              onChange={(e) => setProfile({ ...profile, notes: e.target.value })}
-              rows={3}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors resize-none"
-              placeholder="Any additional information about your career preferences..."
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Save Button */}
-      <div className="flex justify-end items-center">
-        <div className="flex items-center space-x-4">
-          {saveMessage && (
-            <span className={`text-sm ${saveMessage.includes('Error') ? 'text-red-400' : 'text-green-400'}`}>
-              {saveMessage}
-            </span>
-          )}
-          <button
-            onClick={handleSaveProfile}
-            disabled={isSaving}
-            className="rounded-full text-white px-6 py-3 font-semibold transition-opacity hover:opacity-95 disabled:opacity-50"
-            style={{
-              backgroundImage: "linear-gradient(117.96deg, #6f58da, #5131e7)",
-              boxShadow: "0 8px 24px rgba(111, 88, 218, 0.45)",
-            }}
-          >
-            {isSaving ? "Saving..." : "Save Profile"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-
-
-  // Render job portal dashboard
   return (
-    <div className="min-h-screen pt-28 lg:pt-24">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-x-0 -top-24 h-64 bg-radial-fade" />
-      </div>
-
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        >
-          {/* Header */}
-          <div className="flex justify-between items-start mb-8">
-            <div className="text-center">
-              <h1 className="font-heading text-4xl sm:text-5xl text-white leading-tight mb-4">
+    <div className="min-h-screen pt-6 pb-20 px-4">
+      <div className="max-w-2xl mx-auto">
+        {/* Header */}
+        <header className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-xl font-medium text-white">
                 Career Portal
-                <span className="block text-electric">Profile</span>
               </h1>
-              <p className="text-muted text-lg">
-                Welcome back, {memberFirstName || session?.user.email?.split('@')[0] ||
-                  (privyUser?.wallet?.address ? `${privyUser.wallet.address.slice(0, 6)}...${privyUser.wallet.address.slice(-4)}` :
-                    privyUser?.email?.address?.split('@')[0] || 'User')}
+              <p className="text-sm text-zinc-500">
+                Welcome back, {displayName}
               </p>
             </div>
             <button
               onClick={handleSignOut}
-              className="px-4 py-2 text-sm text-white bg-white/10 backdrop-blur-sm border border-white/10 rounded-lg hover:bg-white/20 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-zinc-400 hover:text-white transition-colors"
             >
-              Sign Out
+              <LogOut className="w-3.5 h-3.5" />
+              Sign out
             </button>
           </div>
 
-          {/* Tab Navigation */}
-          <div className="mb-8">
-            <div className="flex space-x-1 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-1">
+          {/* Navigation */}
+          <nav className="flex gap-1 p-1 bg-zinc-900/30 border border-zinc-800/50 rounded-lg">
+            <button
+              onClick={() => setActiveTab("overview")}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm rounded transition-colors ${
+                activeTab === "overview"
+                  ? "bg-zinc-800 text-white"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              <Briefcase className="w-4 h-4" />
+              Overview
+            </button>
+            <button
+              onClick={() => setActiveTab("profile")}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm rounded transition-colors ${
+                activeTab === "profile"
+                  ? "bg-zinc-800 text-white"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              <User className="w-4 h-4" />
+              Profile
+            </button>
+          </nav>
+        </header>
+
+        {/* Content */}
+        {activeTab === "overview" ? (
+          <div className="space-y-4">
+            {/* Job Board Card */}
+            <button
+              onClick={() => router.push("/career-portal/jobs")}
+              className="w-full text-left group"
+            >
+              <div className="p-4 bg-zinc-900/30 border border-zinc-800/50 rounded-lg hover:border-zinc-700 transition-colors">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h2 className="text-sm font-medium text-white mb-1">
+                      Job Board
+                    </h2>
+                    <p className="text-xs text-zinc-500">
+                      Browse opportunities from our community and partners
+                    </p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
+                </div>
+              </div>
+            </button>
+
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-4 bg-zinc-900/30 border border-zinc-800/50 rounded-lg">
+                <p className="text-xs text-zinc-500 mb-1">Your profile</p>
+                <p className="text-sm text-zinc-300">
+                  {profile.academicProgram || "Not set"}
+                </p>
+              </div>
+              <div className="p-4 bg-zinc-900/30 border border-zinc-800/50 rounded-lg">
+                <p className="text-xs text-zinc-500 mb-1">Career interests</p>
+                <p className="text-sm text-zinc-300">
+                  {Object.values(careerInterests).flatMap(v => 
+                    typeof v === 'object' ? Object.values(v) : v
+                  ).filter(Boolean).length} selected
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Profile Form */}
+            <div className="p-4 bg-zinc-900/30 border border-zinc-800/50 rounded-lg">
+              <h2 className="text-sm font-medium text-white mb-4">Personal Information</h2>
+              <p className="text-xs text-zinc-500 mb-4">
+                This information helps us understand our community and match you with relevant opportunities.
+              </p>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs text-zinc-500 mb-1.5">Email</label>
+                  <input
+                    type="email"
+                    value={session?.user.email || memberEmail || ""}
+                    disabled
+                    className="w-full px-3 py-2 bg-zinc-900/50 border border-zinc-800 rounded text-sm text-zinc-500 cursor-not-allowed"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-zinc-500 mb-1.5">Expected Graduation</label>
+                    <input
+                      type="month"
+                      value={profile.graduationDate}
+                      onChange={(e) => setProfile({ ...profile, graduationDate: e.target.value })}
+                      className="w-full px-3 py-2 bg-zinc-900/50 border border-zinc-800 rounded text-sm text-white focus:outline-none focus:border-violet-500/50 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-zinc-500 mb-1.5">Degree/Program</label>
+                    <input
+                      type="text"
+                      value={profile.academicProgram}
+                      onChange={(e) => setProfile({ ...profile, academicProgram: e.target.value })}
+                      className="w-full px-3 py-2 bg-zinc-900/50 border border-zinc-800 rounded text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500/50 transition-colors"
+                      placeholder="e.g. Computer Science"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Career Interests */}
+            <div className="p-4 bg-zinc-900/30 border border-zinc-800/50 rounded-lg">
+              <h2 className="text-sm font-medium text-white mb-4">Career Interests</h2>
+              
+              <div className="flex flex-wrap gap-2">
+                {/* Engineering interests */}
+                {Object.entries(careerInterests.engineering).map(([key, value]) => (
+                  <button
+                    key={key}
+                    onClick={() => setCareerInterests({
+                      ...careerInterests,
+                      engineering: {
+                        ...careerInterests.engineering,
+                        [key]: !value,
+                      },
+                    })}
+                    className={`px-2.5 py-1 text-xs rounded transition-colors ${
+                      value
+                        ? "bg-violet-500/20 text-violet-300 border border-violet-500/30"
+                        : "bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 hover:border-zinc-600"
+                    }`}
+                  >
+                    {formatCareerInterest(key)}
+                  </button>
+                ))}
+                
+                {/* Other interests */}
+                {Object.entries(careerInterests)
+                  .filter(([key]) => key !== 'engineering')
+                  .map(([key, value]) => (
+                    <button
+                      key={key}
+                      onClick={() => setCareerInterests({
+                        ...careerInterests,
+                        [key]: !value,
+                      })}
+                      className={`px-2.5 py-1 text-xs rounded transition-colors ${
+                        value
+                          ? "bg-violet-500/20 text-violet-300 border border-violet-500/30"
+                          : "bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 hover:border-zinc-600"
+                      }`}
+                    >
+                      {formatCareerInterest(key)}
+                    </button>
+                  ))}
+              </div>
+            </div>
+
+            {/* Links & Notes */}
+            <div className="p-4 bg-zinc-900/30 border border-zinc-800/50 rounded-lg">
+              <h2 className="text-sm font-medium text-white mb-4">Links & Notes</h2>
+              
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-zinc-500 mb-1.5">LinkedIn</label>
+                    <input
+                      type="url"
+                      value={profile.linkedinUrl}
+                      onChange={(e) => setProfile({ ...profile, linkedinUrl: e.target.value })}
+                      className="w-full px-3 py-2 bg-zinc-900/50 border border-zinc-800 rounded text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500/50 transition-colors"
+                      placeholder="linkedin.com/in/..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-zinc-500 mb-1.5">GitHub/Portfolio</label>
+                    <input
+                      type="url"
+                      value={profile.githubUrl}
+                      onChange={(e) => setProfile({ ...profile, githubUrl: e.target.value })}
+                      className="w-full px-3 py-2 bg-zinc-900/50 border border-zinc-800 rounded text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500/50 transition-colors"
+                      placeholder="github.com/..."
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs text-zinc-500 mb-1.5">Notes</label>
+                  <textarea
+                    value={profile.notes}
+                    onChange={(e) => setProfile({ ...profile, notes: e.target.value })}
+                    rows={3}
+                    className="w-full px-3 py-2 bg-zinc-900/50 border border-zinc-800 rounded text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500/50 transition-colors resize-none"
+                    placeholder="Additional information about your career interests..."
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Save Button */}
+            <div className="flex items-center justify-end gap-4">
+              {saveMessage && (
+                <span className={`text-xs ${saveMessage.includes('success') ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {saveMessage}
+                </span>
+              )}
               <button
-                className="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all bg-electric text-white shadow-lg"
+                onClick={handleSaveProfile}
+                disabled={isSaving}
+                className="px-4 py-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-sm font-medium rounded transition-colors"
               >
-                Profile
-              </button>
-              <button
-                onClick={() => router.push("/career-portal/jobs")}
-                className="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all text-muted hover:bg-electric hover:text-white"
-              >
-                Job Postings
+                {isSaving ? "Saving..." : "Save profile"}
               </button>
             </div>
           </div>
-
-          {/* Profile Content */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-8 accent-glow"
-          >
-            {renderProfileTab()}
-          </motion.div>
-        </motion.div>
+        )}
       </div>
     </div>
   );
