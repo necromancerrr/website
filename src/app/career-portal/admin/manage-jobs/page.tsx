@@ -508,7 +508,10 @@ export default function ManageJobsPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-              onClick={() => setShowCreateModal(false)}
+              onClick={() => {
+                setShowCreateModal(false);
+                resetForm();
+              }}
             >
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -523,7 +526,10 @@ export default function ManageJobsPage() {
                     Create Job Posting
                   </h2>
                   <button
-                    onClick={() => setShowCreateModal(false)}
+                    onClick={() => {
+                      setShowCreateModal(false);
+                      resetForm();
+                    }}
                     className="text-muted hover:text-white transition-colors"
                   >
                     <svg
@@ -709,7 +715,11 @@ export default function ManageJobsPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setShowCreateModal(false)}
+                      onClick={() => {
+                        setShowCreateModal(false);
+                        resetForm();
+                        setFormError(null);
+                      }}
                       className="px-6 py-3 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-colors"
                     >
                       Cancel
@@ -727,7 +737,11 @@ export default function ManageJobsPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-              onClick={() => setEditingJob(null)}
+              onClick={() => {
+              setEditingJob(null);
+              resetForm();
+              setFormError(null);
+            }}
             >
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -742,7 +756,11 @@ export default function ManageJobsPage() {
                     Edit Job Posting
                   </h2>
                   <button
-                    onClick={() => setEditingJob(null)}
+                    onClick={() => {
+              setEditingJob(null);
+              resetForm();
+              setFormError(null);
+            }}
                     className="text-muted hover:text-white transition-colors"
                   >
                     <svg
@@ -928,7 +946,11 @@ export default function ManageJobsPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setEditingJob(null)}
+                      onClick={() => {
+              setEditingJob(null);
+              resetForm();
+              setFormError(null);
+            }}
                       className="px-6 py-3 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-colors"
                     >
                       Cancel
