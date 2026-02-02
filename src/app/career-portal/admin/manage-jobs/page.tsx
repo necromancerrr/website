@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/api/supabase";
+import { Plus, ArrowLeft } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
 import type { Job, CareerField } from "@/types/career";
 import { CAREER_FIELD_OPTIONS, CAREER_FIELD_LABELS } from "@/types/career";
@@ -439,15 +440,38 @@ export default function ManageJobsPage() {
             <div className="flex gap-2">
               <Link
                 href="/career-portal/admin"
-                className="px-4 py-2 rounded-lg text-white text-sm transition-opacity hover:opacity-95"
+                className="group flex items-center gap-1.5 px-3 py-2 text-muted hover:text-white text-sm transition-all duration-200 rounded-lg hover:bg-white/5"
+              >
+                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform duration-200" />
+                <span>Back</span>
+              </Link>
+              <motion.button
+                onClick={() => setShowCreateModal(true)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="group relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-medium overflow-hidden transition-all duration-300"
                 style={{
-                  backgroundImage:
-                    "linear-gradient(117.96deg, #6f58da, #5131e7)",
-                  boxShadow: "0 4px 12px rgba(111, 88, 218, 0.35)",
+                  background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 50%, #5b21b6 100%)",
+                  boxShadow: "0 4px 20px rgba(124, 58, 237, 0.4), 0 0 0 1px rgba(124, 58, 237, 0.2)",
                 }}
               >
-                Back to Admin
-              </Link>
+                <span 
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{
+                    background: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%)",
+                  }}
+                />
+                <span className="relative z-10 flex items-center gap-2">
+                  <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" />
+                  Add Job
+                </span>
+              </motion.button>
+              <button
+                onClick={fetchJobs}
+                className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-colors text-sm"
+              >
+                Refresh
+              </button>
               <button
                 onClick={handleSignOut}
                 className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-colors text-sm"
@@ -456,34 +480,6 @@ export default function ManageJobsPage() {
               </button>
             </div>
           </div>
-
-          {/* Quick Actions */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-            className="mb-8"
-          >
-            <div className="flex gap-4">
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="rounded-full text-white px-6 py-3 font-semibold transition-opacity hover:opacity-95"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(117.96deg, #6f58da, #5131e7)",
-                  boxShadow: "0 8px 24px rgba(111, 88, 218, 0.45)",
-                }}
-              >
-                Create New Job Posting
-              </button>
-              <button
-                onClick={fetchJobs}
-                className="px-6 py-3 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-colors font-semibold"
-              >
-                Refresh
-              </button>
-            </div>
-          </motion.div>
 
           {/* Stats */}
           <motion.div
