@@ -2,7 +2,7 @@
 import { motion } from "framer-motion";
 
 const upcoming = [
-  { title: "Solana Privacy Hackathon", meta: "Jan 12 - Feb 1 • Online" },
+  { title: "UW Blockchain Society Ideathon", meta: "Feb 13 • 5pm • TBA" },
   { title: "ETH Denver", meta: "Feb 17–21 • Denver" },
 ];
 
