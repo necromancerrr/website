@@ -125,6 +125,9 @@ export default function ManageJobsPage() {
     setFormError(null);
     setFormLoading(true);
 
+    console.log('Creating job with data:', formData);
+    console.log('Referral available value:', formData.referral_available, 'Type:', typeof formData.referral_available);
+
     try {
       const response = await fetch("/api/jobs", {
         method: "POST",
@@ -873,23 +876,23 @@ export default function ManageJobsPage() {
                      </div>
                    </div>
 
-                   <div className="flex items-center gap-2">
-                     <input
-                       type="checkbox"
-                       id="edit_referral_available"
-                       checked={formData.referral_available}
-                       onChange={(e) =>
-                         setFormData({ ...formData, referral_available: e.target.checked })
-                       }
-                       className="w-4 h-4 bg-white/5 border border-white/10 rounded focus:ring-electric focus:border-electric"
-                     />
-                     <label
-                       htmlFor="edit_referral_available"
-                       className="text-sm font-medium text-white cursor-pointer"
-                     >
-                       Referral Available
-                     </label>
-                   </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="edit_referral_available"
+                        checked={formData.referral_available}
+                        onChange={(e) => {
+                          setFormData({ ...formData, referral_available: e.target.checked });
+                        }}
+                        className="w-4 h-4 bg-white/5 border border-white/10 rounded focus:ring-electric focus:border-electric"
+                      />
+                      <label
+                        htmlFor="edit_referral_available"
+                        className="text-sm font-medium text-white cursor-pointer"
+                      >
+                        Referral Available
+                      </label>
+                    </div>
 
                    <div>
                      <label

@@ -36,6 +36,7 @@ export async function PUT(
       experience_level,
       notes,
       career_fields,
+      referral_available,
     } = body as {
       company?: string;
       position?: string;
@@ -43,6 +44,7 @@ export async function PUT(
       experience_level?: string;
       notes?: string;
       career_fields?: CareerField[];
+      referral_available?: boolean;
     };
 
     if (!job_posting_url) {
@@ -68,6 +70,7 @@ export async function PUT(
       experience_level: experience_level?.trim() || null,
       notes: notes?.trim() || null,
       career_fields: career_fields || null,
+      referral_available: referral_available === true,
       last_updated: new Date().toISOString(),
     };
     console.log('PUT: Update data:', JSON.stringify(updateData, null, 2));

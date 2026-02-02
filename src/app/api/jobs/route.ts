@@ -10,6 +10,7 @@ const supabase = createClient(
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    console.log('POST /api/jobs received body:', JSON.stringify(body, null, 2));
     
     const {
       company,
@@ -18,6 +19,7 @@ export async function POST(request: NextRequest) {
       experience_level,
       notes,
       career_fields,
+      referral_available,
     } = body as {
       company?: string;
       position?: string;
@@ -25,6 +27,7 @@ export async function POST(request: NextRequest) {
       experience_level?: string;
       notes?: string;
       career_fields?: CareerField[];
+      referral_available?: boolean;
     };
 
     // Validate required fields
@@ -52,7 +55,10 @@ export async function POST(request: NextRequest) {
       experience_level: experience_level?.trim() || null,
       notes: notes?.trim() || null,
       career_fields: career_fields || null,
+      referral_available: referral_available === true,
     };
+
+    console.log('POST /api/jobs jobData:', JSON.stringify(jobData, null, 2));
 
     const { data, error } = await supabase
       .from('jobs')
