@@ -1,6 +1,7 @@
 "use client";
 
 import { PrivyProvider } from "@privy-io/react-auth";
+import { Fragment } from "react";
 
 export default function PrivyProviderWrapper({
     children,
@@ -28,7 +29,7 @@ export default function PrivyProviderWrapper({
                 loginMethods: ["email", "wallet"],
             }}
         >
-            {children}
+            <Fragment>{children}</Fragment>
         </PrivyProvider>
     );
 }
