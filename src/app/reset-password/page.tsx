@@ -2,6 +2,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { supabase } from "@/api/supabase";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowLeft, Mail } from "lucide-react";
 
 function ResetPasswordContent() {
   const [email, setEmail] = useState<string>("");
@@ -79,102 +80,103 @@ function ResetPasswordContent() {
     }
   };
 
-  
-
   return (
-    <div className="min-h-screen pt-28 lg:pt-24">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-x-0 -top-24 h-64 bg-radial-fade" />
-      </div>
+    <div className="min-h-screen pt-24 px-4">
+      <div className="max-w-md mx-auto">
+        {/* Back Button */}
+        <button
+          onClick={() => router.push("/career-portal")}
+          className="group flex items-center gap-1.5 text-zinc-400 hover:text-white text-sm transition-colors mb-6"
+        >
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+          <span>Back to career portal</span>
+        </button>
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-8rem)]">
-          <div className="w-full max-w-md">
-            <div className="text-center mb-8">
-              <h1 className="font-heading text-4xl sm:text-5xl text-white leading-tight mb-4">
-                Reset Password
-                <span className="block text-electric">Career Portal Access</span>
-              </h1>
-              <p className="text-muted text-lg">
-                Enter your email to receive a password reset link
-              </p>
-            </div>
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-xl font-medium text-white mb-2">
+            Reset Password
+          </h1>
+          <p className="text-sm text-zinc-400">
+            Enter your email to receive a password reset link
+          </p>
+        </div>
 
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-red-400 text-sm mb-4">
-                {error}
-              </div>
-            )}
+        {/* Error */}
+        {error && (
+          <div className="mb-4 p-3 rounded bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            {error}
+          </div>
+        )}
 
-            {success && (
-              <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 text-green-400 text-sm mb-4">
-                {success}
-                <div className="mt-3 pt-3 border-t border-green-500/20">
-                  <p className="text-xs text-green-300 mb-2">Didn't receive the email?</p>
-                  <button
-                    onClick={handleEmailSubmit}
-                    disabled={loading || countdown > 0}
-                    className="w-full bg-green-500/20 hover:bg-green-500/30 text-green-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {loading 
-                      ? "Resending..." 
-                      : countdown > 0 
-                        ? `Resend Reset Link (${countdown}s)` 
-                        : "Resend Reset Link"
-                    }
-                  </button>
-                  {countdown > 0 && (
-                    <p className="text-xs text-green-300 mt-2">
-                      Please wait before requesting another reset link.
-                    </p>
-                  )}
+        {/* Success */}
+        {success && (
+          <div className="mb-6 space-y-4">
+            <div className="p-4 bg-zinc-900/30 border border-zinc-800/50 rounded-lg">
+              <div className="flex items-start gap-3">
+                <Mail className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm text-zinc-300 mb-1">Check your email</p>
+                  <p className="text-xs text-zinc-500">{success}</p>
                 </div>
               </div>
-            )}
+            </div>
 
-            {!success && (
-              <div className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-8 accent-glow">
-                <form onSubmit={handleEmailSubmit} className="space-y-6">
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
-                      Email Address
-                    </label>
-                    <input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
-                      placeholder="your.email@uw.edu"
-                      required
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full rounded-full text-white px-6 py-3 font-semibold transition-opacity hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{
-                      backgroundImage: "linear-gradient(117.96deg, #6f58da, #5131e7)",
-                      boxShadow: "0 8px 24px rgba(111, 88, 218, 0.45)",
-                    }}
-                  >
-                    {loading ? "Sending Reset Link..." : "Send Reset Link"}
-                  </button>
-                </form>
-              </div>
-            )}
-
-            
-            <div className="mt-6 text-center">
-              <p className="text-muted text-sm">
-                Need help? Contact{" "}
-                <a href="mailto:blockchn@uw.edu" className="text-electric hover:underline">
-                  blockchn@uw.edu
-                </a>
-              </p>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-zinc-500">Didn't receive it?</span>
+              <button
+                onClick={handleEmailSubmit}
+                disabled={loading || countdown > 0}
+                className="text-xs text-violet-400 hover:text-violet-300 disabled:text-zinc-600 disabled:cursor-not-allowed transition-colors"
+              >
+                {loading 
+                  ? "Resending..." 
+                  : countdown > 0 
+                    ? `Resend (${countdown}s)` 
+                    : "Resend link"
+                }
+              </button>
             </div>
           </div>
+        )}
+
+        {/* Form */}
+        {!success && (
+          <div className="bg-zinc-900/30 border border-zinc-800/50 rounded-lg p-6">
+            <form onSubmit={handleEmailSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs text-zinc-500 mb-1.5">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-zinc-900/50 border border-zinc-800 rounded text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500/50 transition-colors"
+                  placeholder="your.email@uw.edu"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full px-4 py-2.5 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded transition-colors"
+              >
+                {loading ? "Sending..." : "Send reset link"}
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="mt-6 text-center">
+          <p className="text-xs text-zinc-500">
+            Need help? Contact{" "}
+            <a href="mailto:blockchn@uw.edu" className="text-violet-400 hover:text-violet-300 transition-colors">
+              blockchn@uw.edu
+            </a>
+          </p>
         </div>
       </div>
     </div>
@@ -184,13 +186,10 @@ function ResetPasswordContent() {
 export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen pt-28 lg:pt-24">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute inset-x-0 -top-24 h-64 bg-radial-fade" />
-        </div>
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="flex flex-col items-center justify-center min-h-[calc(100vh-8rem)]">
-            <div className="text-white">Loading...</div>
+      <div className="min-h-screen pt-24 px-4">
+        <div className="max-w-md mx-auto">
+          <div className="text-center py-20 text-zinc-500 text-sm">
+            Loading...
           </div>
         </div>
       </div>

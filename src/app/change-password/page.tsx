@@ -2,6 +2,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { supabase } from "@/api/supabase";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowLeft, Lock, CheckCircle, AlertCircle } from "lucide-react";
 
 function ChangePasswordContent() {
   const [password, setPassword] = useState("");
@@ -59,82 +60,60 @@ function ChangePasswordContent() {
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('=== PASSWORD CHANGE SUBMISSION STARTED ===');
-    console.log('Password:', password ? '[FILLED]' : '[EMPTY]');
-    console.log('Confirm Password:', confirmPassword ? '[FILLED]' : '[EMPTY]');
-    console.log('Current loading state:', loading);
-    console.log('Valid session state:', isValidSession);
-    
     setLoading(true);
     setError(null);
     setSuccess(null);
 
     // Basic validation
     if (!password || !confirmPassword) {
-      console.log('VALIDATION FAILED: Empty fields');
       setError('Please enter both password fields');
       setLoading(false);
       return;
     }
 
     if (password !== confirmPassword) {
-      console.log('VALIDATION FAILED: Passwords do not match');
       setError('Passwords do not match');
       setLoading(false);
       return;
     }
 
-    console.log('VALIDATION PASSED - CALLING SUPABASE API...');
-    
     try {
-      console.log('Step 1: Getting current session...');
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
-        console.error('Step 1 FAILED - Session error:', sessionError);
         setError(`Session error: ${sessionError.message}`);
         setLoading(false);
         return;
       }
       
       if (!session) {
-        console.error('Step 1 FAILED - No active session found');
         setError('No active session found. Please use the password reset link from your email.');
         setLoading(false);
         return;
       }
       
-      console.log('Step 1 SUCCESS - Active session found:', session.user.email);
-      
-      console.log('Step 2: Updating user password...');
-      // Now update the password
-      const { data, error } = await supabase.auth.updateUser({
+      // Update the password
+      const { error } = await supabase.auth.updateUser({
         password: password,
       });
 
-      console.log('Step 2 COMPLETE - Supabase response:', { data, error });
-
       if (error) {
-        console.error('Step 2 FAILED - Supabase error:', error);
         setError(`Error updating password: ${error.message}`);
       } else {
-        console.log('Step 2 SUCCESS - Password updated successfully');
-        setSuccess('Password changed successfully! You will be redirected to the sign-in page.');
+        setSuccess('Password changed successfully! You will be redirected to the career portal.');
         
         // Clear the form
         setPassword("");
         setConfirmPassword("");
         
-        // Redirect to sign-in page after 2 seconds
+        // Redirect to career portal after 2 seconds
         setTimeout(() => {
-          router.push('/sign-in');
+          router.push('/career-portal');
         }, 2000);
       }
     } catch (err) {
-      console.error('=== UNEXPECTED ERROR ===', err);
       setError(`An unexpected error occurred: ${err}`);
     } finally {
-      console.log('=== PASSWORD CHANGE ATTEMPT FINISHED ===');
       setLoading(false);
     }
   };
@@ -165,16 +144,11 @@ function ChangePasswordContent() {
 
   if (validating) {
     return (
-      <div className="min-h-screen pt-28 lg:pt-24">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute inset-x-0 -top-24 h-64 bg-radial-fade" />
-        </div>
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="flex flex-col items-center justify-center min-h-[calc(100vh-8rem)]">
-            <div className="text-white text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-electric mx-auto mb-4"></div>
-              <p>Validating your reset link...</p>
-            </div>
+      <div className="min-h-screen pt-24 px-4">
+        <div className="max-w-md mx-auto">
+          <div className="text-center py-20">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-violet-500 mx-auto mb-3"></div>
+            <p className="text-sm text-zinc-500">Validating your reset link...</p>
           </div>
         </div>
       </div>
@@ -182,160 +156,153 @@ function ChangePasswordContent() {
   }
 
   return (
-    <div className="min-h-screen pt-28 lg:pt-24">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-x-0 -top-24 h-64 bg-radial-fade" />
-      </div>
+    <div className="min-h-screen pt-24 px-4">
+      <div className="max-w-md mx-auto">
+        {/* Back Button */}
+        {!isValidSession && (
+          <button
+            onClick={() => router.push("/reset-password")}
+            className="group flex items-center gap-1.5 text-zinc-400 hover:text-white text-sm transition-colors mb-6"
+          >
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+            <span>Back to reset password</span>
+          </button>
+        )}
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-8rem)]">
-          <div className="w-full max-w-md">
-            <div className="text-center mb-8">
-              <h1 className="font-heading text-4xl sm:text-5xl text-white leading-tight mb-4">
-                Change Password
-                <span className="block text-electric">Set Your New Password</span>
-              </h1>
-              <p className="text-muted text-lg">
-                {isValidSession 
-                  ? `Create a new password for ${email}` 
-                  : 'Validating reset link...'
-                }
-              </p>
-            </div>
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-xl font-medium text-white mb-2">
+            Change Password
+          </h1>
+          <p className="text-sm text-zinc-400">
+            {isValidSession 
+              ? `Create a new password for ${email}` 
+              : 'Validating reset link...'
+            }
+          </p>
+        </div>
 
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-red-400 text-sm mb-6">
-                <div className="flex items-start">
-                  <svg className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
-                  <div>
-                    <p className="font-medium mb-1">Invalid Reset Link</p>
-                    <p>{error}</p>
-                    <p className="text-xs mt-2 text-red-300">
-                      You will be redirected to the reset password page automatically.
-                    </p>
-                  </div>
-                </div>
+        {/* Error */}
+        {error && (
+          <div className="mb-6 p-4 bg-zinc-900/30 border border-zinc-800/50 rounded-lg">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm text-red-400 mb-1">Invalid Reset Link</p>
+                <p className="text-xs text-zinc-500">{error}</p>
+                <p className="text-xs text-zinc-600 mt-2">
+                  You will be redirected automatically.
+                </p>
               </div>
-            )}
-
-            {success && (
-              <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 text-green-400 text-sm mb-6">
-                <div className="flex items-start">
-                  <svg className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <div>
-                    <p className="font-medium mb-1">Password Changed Successfully</p>
-                    <p>{success}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {isValidSession && !success && (
-              <div className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-8 accent-glow">
-                <form onSubmit={handlePasswordChange} className="space-y-6" onSubmitCapture={() => console.log('Form onSubmitCapture triggered')}>
-                  <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-white mb-2">
-                      New Password
-                    </label>
-                    <input
-                      id="password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
-                      placeholder="Enter your new password"
-                      required
-                      minLength={8}
-                    />
-                    
-                    {/* Password strength indicator */}
-                    {password && (
-                      <div className="mt-2">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs text-muted">Password strength:</span>
-                          <span className={`text-xs ${passwordStrength.color.replace('bg-', 'text-')}`}>
-                            {passwordStrength.label}
-                          </span>
-                        </div>
-                        <div className="w-full bg-white/10 rounded-full h-1.5">
-                          <div 
-                            className={`h-1.5 rounded-full transition-all duration-300 ${passwordStrength.color}`}
-                            style={{ width: `${(passwordStrength.strength / 5) * 100}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    )}
-                    
-                    <div className="mt-2 text-xs text-muted">
-                      <p>Password must be at least 6 characters long</p>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-white mb-2">
-                      Confirm New Password
-                    </label>
-                    <input
-                      id="confirmPassword"
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
-                      placeholder="Confirm your new password"
-                      required
-                      minLength={8}
-                    />
-                    {confirmPassword && password !== confirmPassword && (
-                      <p className="mt-1 text-xs text-red-400">Passwords do not match</p>
-                    )}
-                    {confirmPassword && password === confirmPassword && (
-                      <p className="mt-1 text-xs text-green-400">Passwords match</p>
-                    )}
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full rounded-full text-white px-6 py-3 font-semibold transition-opacity hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{
-                      backgroundImage: "linear-gradient(117.96deg, #6f58da, #5131e7)",
-                      boxShadow: "0 8px 24px rgba(111, 88, 218, 0.45)",
-                    }}
-                  >
-                    {loading ? "Changing Password..." : "Change Password"}
-                  </button>
-                  
-                  {/* Debug button */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      console.log('Debug info:');
-                      console.log('Password:', password);
-                      console.log('Confirm Password:', confirmPassword);
-                      console.log('Loading:', loading);
-                      console.log('Valid session:', isValidSession);
-                    }}
-                    className="w-full mt-2 text-xs text-muted hover:text-white"
-                  >
-                    Debug Info
-                  </button>
-                </form>
-              </div>
-            )}
-
-            <div className="mt-6 text-center">
-              <p className="text-muted text-sm">
-                Need help? Contact{" "}
-                <a href="mailto:blockchn@uw.edu" className="text-electric hover:underline">
-                  blockchn@uw.edu
-                </a>
-              </p>
             </div>
           </div>
+        )}
+
+        {/* Success */}
+        {success && (
+          <div className="mb-6 p-4 bg-zinc-900/30 border border-zinc-800/50 rounded-lg">
+            <div className="flex items-start gap-3">
+              <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm text-emerald-500 mb-1">Password Changed</p>
+                <p className="text-xs text-zinc-500">{success}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Form */}
+        {isValidSession && !success && (
+          <div className="bg-zinc-900/30 border border-zinc-800/50 rounded-lg p-6">
+            <form onSubmit={handlePasswordChange} className="space-y-4">
+              <div>
+                <label className="block text-xs text-zinc-500 mb-1.5">
+                  New Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2.5 bg-zinc-900/50 border border-zinc-800 rounded text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500/50 transition-colors"
+                    placeholder="Enter new password"
+                    required
+                    minLength={8}
+                  />
+                </div>
+                
+                {/* Password strength indicator */}
+                {password && (
+                  <div className="mt-2">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-zinc-600">Strength:</span>
+                      <span className={`text-xs ${
+                        passwordStrength.color === 'bg-red-500' || passwordStrength.color === 'bg-red-400' ? 'text-red-400' :
+                        passwordStrength.color === 'bg-yellow-500' ? 'text-yellow-500' :
+                        passwordStrength.color === 'bg-blue-500' ? 'text-blue-500' :
+                        'text-emerald-500'
+                      }`}>
+                        {passwordStrength.label}
+                      </span>
+                    </div>
+                    <div className="w-full bg-zinc-800 rounded-full h-1">
+                      <div 
+                        className={`h-1 rounded-full transition-all duration-300 ${passwordStrength.color}`}
+                        style={{ width: `${(passwordStrength.strength / 5) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+                
+                <p className="mt-2 text-xs text-zinc-600">
+                  Minimum 8 characters
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs text-zinc-500 mb-1.5">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2.5 bg-zinc-900/50 border border-zinc-800 rounded text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500/50 transition-colors"
+                    placeholder="Confirm new password"
+                    required
+                    minLength={8}
+                  />
+                </div>
+                {confirmPassword && password !== confirmPassword && (
+                  <p className="mt-1.5 text-xs text-red-400">Passwords do not match</p>
+                )}
+                {confirmPassword && password === confirmPassword && password.length > 0 && (
+                  <p className="mt-1.5 text-xs text-emerald-500">Passwords match</p>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full px-4 py-2.5 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded transition-colors"
+              >
+                {loading ? "Changing..." : "Change password"}
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="mt-6 text-center">
+          <p className="text-xs text-zinc-500">
+            Need help? Contact{" "}
+            <a href="mailto:blockchn@uw.edu" className="text-violet-400 hover:text-violet-300 transition-colors">
+              blockchn@uw.edu
+            </a>
+          </p>
         </div>
       </div>
     </div>
@@ -345,13 +312,10 @@ function ChangePasswordContent() {
 export default function ChangePasswordPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen pt-28 lg:pt-24">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute inset-x-0 -top-24 h-64 bg-radial-fade" />
-        </div>
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="flex flex-col items-center justify-center min-h-[calc(100vh-8rem)]">
-            <div className="text-white">Loading...</div>
+      <div className="min-h-screen pt-24 px-4">
+        <div className="max-w-md mx-auto">
+          <div className="text-center py-20 text-zinc-500 text-sm">
+            Loading...
           </div>
         </div>
       </div>
