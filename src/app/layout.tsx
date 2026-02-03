@@ -28,8 +28,7 @@ export const metadata: Metadata = {
 const themeScript = `
   (function() {
     const stored = localStorage.getItem('uwb-theme-preference');
-    const systemLight = window.matchMedia('(prefers-color-scheme: light)').matches;
-    const theme = stored || (systemLight ? 'light' : 'dark');
+    const theme = stored || 'dark';
     document.documentElement.setAttribute('data-theme', theme);
   })();
 `;
