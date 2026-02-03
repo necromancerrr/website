@@ -5,16 +5,22 @@ export default function Sponsors() {
     <section id="sponsors" className="py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-8 flex items-end justify-between">
-          <h2 className="font-heading text-3xl text-white">Sponsors</h2>
+          <h2 className="font-heading text-3xl" style={{ color: "var(--text-primary)" }}>Sponsors</h2>
           <a href="mailto:blockchn@uw.edu" className="text-sm text-electric hover:text-electricAlt">Become a sponsor →</a>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
           {placeholders.map((_, i) => (
             <div
               key={i}
-              className="flex items-center justify-center rounded-xl border border-white/10 bg-black/60 h-24"
+              className="flex items-center justify-center rounded-xl h-24"
+              style={{
+                backgroundColor: "var(--surface)",
+                borderWidth: "1px",
+                borderStyle: "solid",
+                borderColor: "var(--border)",
+              }}
             >
-              <span className="text-muted text-xs">Logo {i + 1}</span>
+              <span className="text-xs" style={{ color: "var(--text-secondary)" }}>Logo {i + 1}</span>
             </div>
           ))}
         </div>

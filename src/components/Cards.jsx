@@ -25,8 +25,8 @@ export default function Cards() {
     <section id="focus" className="py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-10">
-          <h2 className="font-heading text-3xl sm:text-4xl text-white">What we focus on</h2>
-          <p className="mt-4 text-muted max-w-2xl">Four pillars define our club’s direction. Strong, simple, and non-generic — crafted for impact.</p>
+          <h2 className="font-heading text-3xl sm:text-4xl" style={{ color: "var(--text-primary)" }}>What we focus on</h2>
+          <p className="mt-4 max-w-2xl" style={{ color: "var(--text-secondary)" }}>Four pillars define our club's direction. Strong, simple, and non-generic — crafted for impact.</p>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {items.map((item) => (
@@ -36,11 +36,17 @@ export default function Cards() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, ease: "easeOut" }}
-              className="group rounded-xl border border-white/10 bg-black/60 p-6 hover:border-electric hover:shadow-glow transition duration-300"
+              className="group rounded-xl p-6 hover:border-electric hover:shadow-glow transition duration-300"
+              style={{
+                backgroundColor: "var(--surface)",
+                borderWidth: "1px",
+                borderStyle: "solid",
+                borderColor: "var(--border)",
+              }}
             >
-              <h3 className="font-heading text-xl text-white">{item.title}</h3>
-              <p className="mt-3 text-sm text-muted leading-relaxed">{item.body}</p>
-              <div className="mt-4 h-px w-full bg-white/10 group-hover:bg-electric transition-colors" />
+              <h3 className="font-heading text-xl" style={{ color: "var(--text-primary)" }}>{item.title}</h3>
+              <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>{item.body}</p>
+              <div className="mt-4 h-px w-full group-hover:bg-electric transition-colors" style={{ backgroundColor: "var(--border)" }} />
             </motion.div>
           ))}
         </div>

@@ -2,13 +2,47 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
-/* Theme variables */
+/* ===== DARK THEME (default) ===== */
 :root {
   --background: #000000;
+  --background-secondary: #111111;
+  --surface: rgba(0, 0, 0, 0.6);
+  --surface-hover: rgba(255, 255, 255, 0.1);
   --foreground: #FFFFFF;
+  --text-primary: #FFFFFF;
+  --text-secondary: #9CA3AF;
+  --border: rgba(255, 255, 255, 0.1);
+  --border-hover: rgba(255, 255, 255, 0.2);
   --muted: #9CA3AF;
-  --electric: #6A0DFF; /* primary */
-  --electric-alt: #7C3AED; /* accent */
+  --electric: #874ae8;
+  --electric-alt: #7C3AED;
+
+  /* Background pattern opacity */
+  --grid-opacity: 0.06;
+  --glow-opacity: 0.25;
+  --grain-opacity: 0.6;
+}
+
+/* ===== LIGHT THEME ===== */
+[data-theme="light"] {
+  --background: #F8F9FA;
+  --background-secondary: #FFFFFF;
+  --surface: rgba(255, 255, 255, 0.8);
+  --surface-hover: rgba(0, 0, 0, 0.05);
+  --foreground: #1A1A1A;
+  --text-primary: #1A1A1A;
+  --text-secondary: #6B7280;
+  --border: rgba(0, 0, 0, 0.1);
+  --border-hover: rgba(0, 0, 0, 0.2);
+  --muted: #6B7280;
+  /* Accent colors preserved */
+  --electric: #6A0DFF;
+  --electric-alt: #7C3AED;
+
+  /* Background pattern opacity - more subtle in light mode */
+  --grid-opacity: 0.04;
+  --glow-opacity: 0.15;
+  --grain-opacity: 0.3;
 }
 
 /* Tailwind inline theme mappings */
@@ -19,7 +53,7 @@
   --font-mono: JetBrains Mono, monospace;
 }
 
-/* Base layout: high-contrast dark with depth */
+/* ===== BASE STYLES ===== */
 body {
   background: var(--background);
   color: var(--foreground);
@@ -29,9 +63,9 @@ body {
 /* Atmospheric background: faint grid + radial glow */
 body {
   background-image:
-    radial-gradient(1000px 500px at 50% -50%, rgba(124,58,237,0.25), rgba(0,0,0,0) 70%),
-    linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+    radial-gradient(1000px 500px at 50% -50%, rgba(124, 58, 237, var(--glow-opacity)), transparent 70%),
+    linear-gradient(rgba(128, 128, 128, var(--grid-opacity)) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(128, 128, 128, var(--grid-opacity)) 1px, transparent 1px);
   background-size:
     100% 100%,
     24px 24px,
@@ -49,10 +83,45 @@ body::before {
   inset: 0;
   pointer-events: none;
   background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150"><filter id="n" x="0" y="0"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23n)" opacity="0.05"/></svg>');
-  opacity: 0.6;
+  opacity: var(--grain-opacity);
 }
 
-/* Utility: glowing accent border */
+/* ===== SMOOTH TRANSITIONS ===== */
+* {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
+}
+
+/* Exclude transforms and animations from theme transitions */
+*:not([class*="animate"]):not([class*="transition"]) {
+  transition-property: background-color, border-color, color, fill, stroke;
+}
+
+/* ===== UTILITY CLASSES ===== */
 .accent-glow {
   box-shadow: 0 0 40px rgba(106, 13, 255, 0.35);
+}
+
+/* Theme-aware text utilities */
+.text-theme-primary {
+  color: var(--text-primary);
+}
+
+.text-theme-secondary {
+  color: var(--text-secondary);
+}
+
+/* Theme-aware background utilities */
+.bg-theme-surface {
+  background-color: var(--surface);
+}
+
+.bg-theme-background {
+  background-color: var(--background);
+}
+
+/* Theme-aware border utilities */
+.border-theme {
+  border-color: var(--border);
 }

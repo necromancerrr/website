@@ -1,7 +1,16 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { useTheme } from "./ThemeContext";
 
 export default function Footer() {
+  const { theme } = useTheme();
+
+  const logoSrc = theme === "light"
+    ? "/images/logo-light.png"
+    : "/images/transparent logo for website copy 2.png";
+
   return (
     // No outer spacing or backgrounds; inherits page backdrop.
     <footer>
@@ -9,7 +18,7 @@ export default function Footer() {
         <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
             <Image
-              src="/images/transparent logo for website copy 2.png"
+              src={logoSrc}
               alt="UW Blockchain Society logo"
               width={128}
               height={128}
@@ -19,33 +28,33 @@ export default function Footer() {
             />
 
             <nav className="hidden md:flex items-center gap-6">
-              <Link href="#about" className="text-sm text-muted hover:text-white">About</Link>
-              <Link href="#focus" className="text-sm text-muted hover:text-white">Focus</Link>
-              <Link href="#events" className="text-sm text-muted hover:text-white">Events</Link>
-              <Link href="#sponsors" className="text-sm text-muted hover:text-white">Sponsors</Link>
-              <Link href="#team" className="text-sm text-muted hover:text-white">Team</Link>
-              <a href="https://docs.google.com/forms/d/e/1FAIpQLSfxNK9CgnIwdQzpx3_ckLAjJc6RiyTZjzjYjmnLAaxzpDpYXA/viewform?usp=dialog" target="_blank" rel="noopener noreferrer" className="text-sm text-muted hover:text-white">Apply</a>
+              <Link href="#about" className="text-sm hover:opacity-80 transition-opacity" style={{ color: "var(--text-secondary)" }}>About</Link>
+              <Link href="#focus" className="text-sm hover:opacity-80 transition-opacity" style={{ color: "var(--text-secondary)" }}>Focus</Link>
+              <Link href="#events" className="text-sm hover:opacity-80 transition-opacity" style={{ color: "var(--text-secondary)" }}>Events</Link>
+              <Link href="#sponsors" className="text-sm hover:opacity-80 transition-opacity" style={{ color: "var(--text-secondary)" }}>Sponsors</Link>
+              <Link href="#team" className="text-sm hover:opacity-80 transition-opacity" style={{ color: "var(--text-secondary)" }}>Team</Link>
+              <a href="https://docs.google.com/forms/d/e/1FAIpQLSfxNK9CgnIwdQzpx3_ckLAjJc6RiyTZjzjYjmnLAaxzpDpYXA/viewform?usp=dialog" target="_blank" rel="noopener noreferrer" className="text-sm hover:opacity-80 transition-opacity" style={{ color: "var(--text-secondary)" }}>Apply</a>
             </nav>
           </div>
 
           <div className="flex flex-col gap-3 text-sm">
             <div className="flex items-center gap-6 md:justify-end">
-              <a href="mailto:blockchn@uw.edu" className="text-muted hover:text-white">Contact</a>
-              <a href="https://twitter.com/udubblockchain" target="_blank" rel="noopener noreferrer" className="text-muted hover:text-white">Twitter</a>
-              <a href="https://www.instagram.com/uwblockchain/" target="_blank" rel="noopener noreferrer" className="text-muted hover:text-white">Instagram</a>
+              <a href="mailto:blockchn@uw.edu" className="hover:opacity-80 transition-opacity" style={{ color: "var(--text-secondary)" }}>Contact</a>
+              <a href="https://twitter.com/udubblockchain" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity" style={{ color: "var(--text-secondary)" }}>Twitter</a>
+              <a href="https://www.instagram.com/uwblockchain/" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity" style={{ color: "var(--text-secondary)" }}>Instagram</a>
             </div>
-            <p className="text-xs text-muted md:text-right">© {new Date().getFullYear()} UW Blockchain Society. All rights reserved.</p>
+            <p className="text-xs md:text-right" style={{ color: "var(--text-secondary)" }}>© {new Date().getFullYear()} UW Blockchain Society. All rights reserved.</p>
           </div>
         </div>
 
         <div className="mt-8 md:hidden">
           <nav className="flex flex-col gap-2">
-            <Link href="#about" className="text-sm text-muted hover:text-white">About</Link>
-            <Link href="#focus" className="text-sm text-muted hover:text-white">Focus</Link>
-            <Link href="#events" className="text-sm text-muted hover:text-white">Events</Link>
-            <Link href="#sponsors" className="text-sm text-muted hover:text-white">Sponsors</Link>
-            <Link href="#team" className="text-sm text-muted hover:text-white">Team</Link>
-            <a href="https://docs.google.com/forms/d/e/1FAIpQLSfxNK9CgnIwdQzpx3_ckLAjJc6RiyTZjzjYjmnLAaxzpDpYXA/viewform?usp=dialog" target="_blank" rel="noopener noreferrer" className="text-sm text-muted hover:text-white">Apply</a>
+            <Link href="#about" className="text-sm hover:opacity-80 transition-opacity" style={{ color: "var(--text-secondary)" }}>About</Link>
+            <Link href="#focus" className="text-sm hover:opacity-80 transition-opacity" style={{ color: "var(--text-secondary)" }}>Focus</Link>
+            <Link href="#events" className="text-sm hover:opacity-80 transition-opacity" style={{ color: "var(--text-secondary)" }}>Events</Link>
+            <Link href="#sponsors" className="text-sm hover:opacity-80 transition-opacity" style={{ color: "var(--text-secondary)" }}>Sponsors</Link>
+            <Link href="#team" className="text-sm hover:opacity-80 transition-opacity" style={{ color: "var(--text-secondary)" }}>Team</Link>
+            <a href="https://docs.google.com/forms/d/e/1FAIpQLSfxNK9CgnIwdQzpx3_ckLAjJc6RiyTZjzjYjmnLAaxzpDpYXA/viewform?usp=dialog" target="_blank" rel="noopener noreferrer" className="text-sm hover:opacity-80 transition-opacity" style={{ color: "var(--text-secondary)" }}>Apply</a>
           </nav>
         </div>
       </div>

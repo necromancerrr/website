@@ -4,6 +4,7 @@ import "./globals.css";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import PrivyProviderWrapper from "@/components/PrivyProviderWrapper";
+import { ThemeProvider } from "@/components/ThemeContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,20 +24,36 @@ export const metadata: Metadata = {
   },
 };
 
+// Script to prevent flash of wrong theme
+const themeScript = `
+  (function() {
+    const stored = localStorage.getItem('uwb-theme-preference');
+    const systemLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+    const theme = stored || (systemLight ? 'light' : 'dark');
+    document.documentElement.setAttribute('data-theme', theme);
+  })();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <PrivyProviderWrapper>
-          <Navbar />
-          <main className="relative">{children}</main>
-          <Footer />
-        </PrivyProviderWrapper>
+        <ThemeProvider>
+          <PrivyProviderWrapper>
+            <Navbar />
+            <main className="relative">{children}</main>
+            <Footer />
+          </PrivyProviderWrapper>
+        </ThemeProvider>
       </body>
     </html>
   );
 }
+

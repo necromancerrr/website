@@ -7,7 +7,7 @@ export default function Home() {
       <ClientHomepageSections />
       <section id="about" className="py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <p className="text-muted max-w-2xl">
+          <p className="max-w-2xl" style={{ color: "var(--text-secondary)" }}>
             UW Blockchain Society is a student-led builder org focused on meaningful education, applied research, and shipping projects — not hype.
           </p>
         </div>

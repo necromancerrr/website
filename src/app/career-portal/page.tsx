@@ -5,10 +5,12 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/api/supabase";
 import { usePrivy } from "@privy-io/react-auth";
+import { useTheme } from "@/components/ThemeContext";
 
 export default function CareerPortalPage() {
   const router = useRouter();
   const { ready, authenticated, user: privyUser, login: privyLogin, logout: privyLogout } = usePrivy();
+  const { theme } = useTheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [session, setSession] = useState<Session | null>(null);
@@ -230,7 +232,7 @@ export default function CareerPortalPage() {
         const walletAddress = privyUser.wallet?.address?.toLowerCase();
         if (walletAddress) {
           console.log('Checking wallet authorization for:', walletAddress);
-          
+
           try {
             const response = await fetch('/api/auth/check-wallet', {
               method: 'POST',
@@ -340,11 +342,11 @@ export default function CareerPortalPage() {
           >
             <div className="w-full max-w-md">
               <div className="text-center mb-8">
-                <h1 className="font-heading text-4xl sm:text-5xl text-white leading-tight mb-4">
+                <h1 className="font-heading text-4xl sm:text-5xl leading-tight mb-4" style={{ color: "var(--text-primary)" }}>
                   Career Portal
                   <span className="block text-electric">Sign In</span>
                 </h1>
-                <p className="text-muted text-lg">
+                <p className="text-lg" style={{ color: "var(--text-secondary)" }}>
                   Access exclusive opportunities and connect with industry
                   partners.
                 </p>
@@ -354,7 +356,13 @@ export default function CareerPortalPage() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-                className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-8 accent-glow"
+                className="backdrop-blur-sm rounded-2xl p-8 accent-glow"
+                style={{
+                  backgroundColor: "var(--surface)",
+                  borderWidth: "1px",
+                  borderStyle: "solid",
+                  borderColor: "var(--border)",
+                }}
               >
                 <form onSubmit={handleSignIn} className="space-y-6">
                   {error && (
@@ -366,7 +374,8 @@ export default function CareerPortalPage() {
                   <div>
                     <label
                       htmlFor="email"
-                      className="block text-sm font-medium text-white mb-2"
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: "var(--text-primary)" }}
                     >
                       Email
                     </label>
@@ -375,7 +384,14 @@ export default function CareerPortalPage() {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
+                      className="w-full px-4 py-3 rounded-lg focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
+                      style={{
+                        backgroundColor: "var(--surface)",
+                        borderWidth: "1px",
+                        borderStyle: "solid",
+                        borderColor: "var(--border)",
+                        color: "var(--text-primary)",
+                      }}
                       placeholder="your.email@uw.edu"
                       required
                     />
@@ -384,7 +400,8 @@ export default function CareerPortalPage() {
                   <div>
                     <label
                       htmlFor="password"
-                      className="block text-sm font-medium text-white mb-2"
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: "var(--text-primary)" }}
                     >
                       Password
                     </label>
@@ -393,7 +410,14 @@ export default function CareerPortalPage() {
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
+                      className="w-full px-4 py-3 rounded-lg focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
+                      style={{
+                        backgroundColor: "var(--surface)",
+                        borderWidth: "1px",
+                        borderStyle: "solid",
+                        borderColor: "var(--border)",
+                        color: "var(--text-primary)",
+                      }}
                       placeholder="••••••••"
                       required
                     />
@@ -403,9 +427,9 @@ export default function CareerPortalPage() {
                     <label className="flex items-center">
                       <input
                         type="checkbox"
-                        className="w-4 h-4 bg-white/5 border border-white/10 rounded focus:ring-electric focus:border-electric"
+                        className="w-4 h-4 rounded focus:ring-electric focus:border-electric" style={{ backgroundColor: "var(--surface)", borderWidth: "1px", borderStyle: "solid", borderColor: "var(--border)" }}
                       />
-                      <span className="ml-2 text-sm text-muted">
+                      <span className="ml-2 text-sm" style={{ color: "var(--text-secondary)" }}>
                         Remember me
                       </span>
                     </label>
@@ -434,9 +458,9 @@ export default function CareerPortalPage() {
 
                 {/* Divider */}
                 <div className="flex items-center my-6">
-                  <div className="flex-1 border-t border-white/10"></div>
-                  <span className="px-4 text-muted text-sm">or</span>
-                  <div className="flex-1 border-t border-white/10"></div>
+                  <div className="flex-1" style={{ borderTopWidth: "1px", borderTopStyle: "solid", borderColor: "var(--border)" }}></div>
+                  <span className="px-4 text-sm" style={{ color: "var(--text-secondary)" }}>or</span>
+                  <div className="flex-1" style={{ borderTopWidth: "1px", borderTopStyle: "solid", borderColor: "var(--border)" }}></div>
                 </div>
 
                 {/* Wallet Connect Button */}
@@ -444,7 +468,14 @@ export default function CareerPortalPage() {
                   type="button"
                   onClick={() => privyLogin()}
                   disabled={!ready}
-                  className="w-full rounded-full text-white px-6 py-3 font-semibold transition-all hover:scale-[1.02] disabled:opacity-50 bg-white/10 border border-white/20 hover:bg-white/15 flex items-center justify-center gap-3"
+                  className="w-full rounded-full px-6 py-3 font-semibold transition-all hover:scale-[1.02] disabled:opacity-50 flex items-center justify-center gap-3"
+                  style={{
+                    backgroundColor: "var(--surface)",
+                    borderWidth: "1px",
+                    borderStyle: "solid",
+                    borderColor: "var(--border)",
+                    color: "var(--text-primary)",
+                  }}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect width="20" height="14" x="2" y="5" rx="2" />
@@ -454,7 +485,7 @@ export default function CareerPortalPage() {
                 </button>
 
                 <div className="mt-6 text-center">
-                  <p className="text-muted text-sm">
+                  <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
                     Don't have an account?{" "}
                     <a
                       href="#"
@@ -535,43 +566,64 @@ export default function CareerPortalPage() {
     <div className="space-y-8">
       {/* Personal Information */}
       <div>
-        <h3 className="text-xl font-semibold text-white mb-4">Personal Information</h3>
-        <label className="block text-sm text-white mb-4">
+        <h3 className="text-xl font-semibold mb-4" style={{ color: "var(--text-primary)" }}>Personal Information</h3>
+        <label className="block text-sm mb-4" style={{ color: "var(--text-primary)" }}>
           Filling this is optional. We will use these data to understand our club demography better.
         </label>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-white mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-primary)" }}>
               Email
             </label>
             <input
               type="email"
               value={session?.user.email || ""}
               disabled
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-muted cursor-not-allowed"
+              className="w-full px-4 py-3 rounded-lg cursor-not-allowed"
+              style={{
+                backgroundColor: "var(--surface)",
+                borderWidth: "1px",
+                borderStyle: "solid",
+                borderColor: "var(--border)",
+                color: "var(--text-secondary)",
+              }}
               readOnly
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-white mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-primary)" }}>
               Expected Graduation
             </label>
             <input
               type="month"
               value={profile.graduationDate}
               onChange={(e) => setProfile({ ...profile, graduationDate: e.target.value })}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
+              className="w-full px-4 py-3 rounded-lg focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
+              style={{
+                backgroundColor: "var(--surface)",
+                borderWidth: "1px",
+                borderStyle: "solid",
+                borderColor: "var(--border)",
+                color: "var(--text-primary)",
+              }}
             />
           </div>
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-white mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-primary)" }}>
               Degree
             </label>
             <input
               type="text"
               value={profile.academicProgram}
               onChange={(e) => setProfile({ ...profile, academicProgram: e.target.value })}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
+              className="w-full px-4 py-3 rounded-lg focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
+              style={{
+                backgroundColor: "var(--surface)",
+                borderWidth: "1px",
+                borderStyle: "solid",
+                borderColor: "var(--border)",
+                color: "var(--text-primary)",
+              }}
               placeholder="e.g., Computer Science, Business Administration"
             />
           </div>
@@ -580,10 +632,10 @@ export default function CareerPortalPage() {
 
       {/* Career Interests */}
       <div>
-        <h3 className="text-xl font-semibold text-white mb-4">Career Interests</h3>
+        <h3 className="text-xl font-semibold mb-4" style={{ color: "var(--text-primary)" }}>Career Interests</h3>
         <div className="space-y-4">
           <div>
-            <h4 className="text-sm font-medium text-white mb-2">Engineering</h4>
+            <h4 className="text-sm font-medium mb-2" style={{ color: "var(--text-primary)" }}>Engineering</h4>
             <div className="space-y-2">
               {Object.entries(careerInterests.engineering).map(([key, value]) => (
                 <label key={key} className="flex items-center">
@@ -599,9 +651,9 @@ export default function CareerPortalPage() {
                         },
                       })
                     }
-                    className="w-4 h-4 bg-white/5 border border-white/10 rounded focus:ring-electric focus:border-electric"
+                    className="w-4 h-4 rounded focus:ring-electric focus:border-electric" style={{ backgroundColor: "var(--surface)", borderWidth: "1px", borderStyle: "solid", borderColor: "var(--border)" }}
                   />
-                  <span className="ml-2 text-sm text-white capitalize">
+                  <span className="ml-2 text-sm capitalize" style={{ color: "var(--text-primary)" }}>
                     {key.replace(/([A-Z])/g, ' $1').trim()}
                   </span>
                 </label>
@@ -610,7 +662,7 @@ export default function CareerPortalPage() {
           </div>
 
           <div>
-            <h4 className="text-sm font-medium text-white mb-2">Other Interests</h4>
+            <h4 className="text-sm font-medium mb-2" style={{ color: "var(--text-primary)" }}>Other Interests</h4>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {Object.entries(careerInterests).filter(([key]) => key !== 'engineering').map(([key, value]) => (
                 <label key={key} className="flex items-center">
@@ -623,9 +675,9 @@ export default function CareerPortalPage() {
                         [key]: e.target.checked,
                       })
                     }
-                    className="w-4 h-4 bg-white/5 border border-white/10 rounded focus:ring-electric focus:border-electric"
+                    className="w-4 h-4 rounded focus:ring-electric focus:border-electric" style={{ backgroundColor: "var(--surface)", borderWidth: "1px", borderStyle: "solid", borderColor: "var(--border)" }}
                   />
-                  <span className="ml-2 text-sm text-white capitalize">
+                  <span className="ml-2 text-sm capitalize" style={{ color: "var(--text-primary)" }}>
                     {key.replace(/([A-Z])/g, ' $1').trim()}
                   </span>
                 </label>
@@ -639,41 +691,62 @@ export default function CareerPortalPage() {
 
       {/* Additional Information */}
       <div>
-        <h3 className="text-xl font-semibold text-white mb-4">Additional Information</h3>
+        <h3 className="text-xl font-semibold mb-4" style={{ color: "var(--text-primary)" }}>Additional Information</h3>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-white mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-primary)" }}>
               LinkedIn Profile URL (Optional)
             </label>
             <input
               type="url"
               value={profile.linkedinUrl}
               onChange={(e) => setProfile({ ...profile, linkedinUrl: e.target.value })}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
+              className="w-full px-4 py-3 rounded-lg focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
+              style={{
+                backgroundColor: "var(--surface)",
+                borderWidth: "1px",
+                borderStyle: "solid",
+                borderColor: "var(--border)",
+                color: "var(--text-primary)",
+              }}
               placeholder="https://linkedin.com/in/yourprofile"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-white mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-primary)" }}>
               GitHub/Portfolio URL (Optional)
             </label>
             <input
               type="url"
               value={profile.githubUrl}
               onChange={(e) => setProfile({ ...profile, githubUrl: e.target.value })}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
+              className="w-full px-4 py-3 rounded-lg focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors"
+              style={{
+                backgroundColor: "var(--surface)",
+                borderWidth: "1px",
+                borderStyle: "solid",
+                borderColor: "var(--border)",
+                color: "var(--text-primary)",
+              }}
               placeholder="https://github.com/yourusername"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-white mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-primary)" }}>
               Notes (Optional)
             </label>
             <textarea
               value={profile.notes}
               onChange={(e) => setProfile({ ...profile, notes: e.target.value })}
               rows={3}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors resize-none"
+              className="w-full px-4 py-3 rounded-lg focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors resize-none"
+              style={{
+                backgroundColor: "var(--surface)",
+                borderWidth: "1px",
+                borderStyle: "solid",
+                borderColor: "var(--border)",
+                color: "var(--text-primary)",
+              }}
               placeholder="Any additional information about your career preferences..."
             />
           </div>
@@ -722,11 +795,11 @@ export default function CareerPortalPage() {
           {/* Header */}
           <div className="flex justify-between items-start mb-8">
             <div className="text-center">
-              <h1 className="font-heading text-4xl sm:text-5xl text-white leading-tight mb-4">
+              <h1 className="font-heading text-4xl sm:text-5xl leading-tight mb-4" style={{ color: "var(--text-primary)" }}>
                 Career Portal
                 <span className="block text-electric">Profile</span>
               </h1>
-              <p className="text-muted text-lg">
+              <p className="text-lg" style={{ color: "var(--text-secondary)" }}>
                 Welcome back, {memberFirstName || session?.user.email?.split('@')[0] ||
                   (privyUser?.wallet?.address ? `${privyUser.wallet.address.slice(0, 6)}...${privyUser.wallet.address.slice(-4)}` :
                     privyUser?.email?.address?.split('@')[0] || 'User')}
@@ -734,7 +807,14 @@ export default function CareerPortalPage() {
             </div>
             <button
               onClick={handleSignOut}
-              className="px-4 py-2 text-sm text-white bg-white/10 backdrop-blur-sm border border-white/10 rounded-lg hover:bg-white/20 transition-colors"
+              className="px-4 py-2 text-sm backdrop-blur-sm rounded-lg transition-colors"
+              style={{
+                backgroundColor: "var(--surface)",
+                borderWidth: "1px",
+                borderStyle: "solid",
+                borderColor: "var(--border)",
+                color: "var(--text-primary)",
+              }}
             >
               Sign Out
             </button>
@@ -742,15 +822,25 @@ export default function CareerPortalPage() {
 
           {/* Tab Navigation */}
           <div className="mb-8">
-            <div className="flex space-x-1 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-1">
+            <div
+              className="flex space-x-1 backdrop-blur-sm rounded-xl p-1"
+              style={{
+                backgroundColor: "var(--surface)",
+                borderWidth: "1px",
+                borderStyle: "solid",
+                borderColor: "var(--border)",
+              }}
+            >
               <button
-                className="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all bg-electric text-white shadow-lg"
+                className="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all bg-electric shadow-lg"
+                style={{ color: theme === "light" ? "#000000" : "#FFFFFF" }}
               >
                 Profile
               </button>
               <button
                 onClick={() => router.push("/career-portal/jobs")}
-                className="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all text-muted hover:bg-electric hover:text-white"
+                className="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all hover:bg-electric hover:text-white"
+                style={{ color: "var(--text-secondary)" }}
               >
                 Job Postings
               </button>
@@ -762,7 +852,13 @@ export default function CareerPortalPage() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-8 accent-glow"
+            className="backdrop-blur-sm rounded-2xl p-8 accent-glow"
+            style={{
+              backgroundColor: "var(--surface)",
+              borderWidth: "1px",
+              borderStyle: "solid",
+              borderColor: "var(--border)",
+            }}
           >
             {renderProfileTab()}
           </motion.div>

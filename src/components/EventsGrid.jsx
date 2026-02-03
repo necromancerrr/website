@@ -20,12 +20,12 @@ export default function EventsGrid() {
     <section id="events" className="py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-10">
-          <h2 className="font-heading text-3xl text-white">Highlights</h2>
-          <p className="mt-3 text-muted">Upcoming sessions and a snapshot of recent events — workshops, conferences, and community meetups.</p>
+          <h2 className="font-heading text-3xl" style={{ color: "var(--text-primary)" }}>Highlights</h2>
+          <p className="mt-3" style={{ color: "var(--text-secondary)" }}>Upcoming sessions and a snapshot of recent events — workshops, conferences, and community meetups.</p>
         </div>
 
         <div className="mb-6">
-          <h3 className="font-heading text-xl text-white">Upcoming Events</h3>
+          <h3 className="font-heading text-xl" style={{ color: "var(--text-primary)" }}>Upcoming Events</h3>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {upcoming.map((e, i) => (
@@ -35,19 +35,25 @@ export default function EventsGrid() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, ease: "easeOut", delay: i * 0.05 }}
-              className="rounded-xl border border-white/10 bg-black/60 p-5 hover:border-electric hover:shadow-glow transition"
+              className="rounded-xl p-5 hover:border-electric hover:shadow-glow transition"
+              style={{
+                backgroundColor: "var(--surface)",
+                borderWidth: "1px",
+                borderStyle: "solid",
+                borderColor: "var(--border)",
+              }}
             >
               <div className="flex items-center justify-between">
-                <h3 className="text-white font-heading text-lg">{e.title}</h3>
-                <span className="text-xs text-muted">Upcoming</span>
+                <h3 className="font-heading text-lg" style={{ color: "var(--text-primary)" }}>{e.title}</h3>
+                <span className="text-xs" style={{ color: "var(--text-secondary)" }}>Upcoming</span>
               </div>
-              {e.meta ? <p className="mt-2 text-sm text-muted">{e.meta}</p> : null}
+              {e.meta ? <p className="mt-2 text-sm" style={{ color: "var(--text-secondary)" }}>{e.meta}</p> : null}
             </motion.div>
           ))}
         </div>
 
         <div className="mt-10 mb-6">
-          <h3 className="font-heading text-xl text-white">Past Events</h3>
+          <h3 className="font-heading text-xl" style={{ color: "var(--text-primary)" }}>Past Events</h3>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {past.map((e, i) => (
@@ -57,13 +63,19 @@ export default function EventsGrid() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, ease: "easeOut", delay: i * 0.05 }}
-              className="rounded-xl border border-white/10 bg-black/60 p-5 hover:border-electric hover:shadow-glow transition"
+              className="rounded-xl p-5 hover:border-electric hover:shadow-glow transition"
+              style={{
+                backgroundColor: "var(--surface)",
+                borderWidth: "1px",
+                borderStyle: "solid",
+                borderColor: "var(--border)",
+              }}
             >
               <div className="flex items-center justify-between">
-                <h3 className="text-white font-heading text-lg">{e.title}</h3>
-                <span className="text-xs text-muted">Past</span>
+                <h3 className="font-heading text-lg" style={{ color: "var(--text-primary)" }}>{e.title}</h3>
+                <span className="text-xs" style={{ color: "var(--text-secondary)" }}>Past</span>
               </div>
-              {e.meta ? <p className="mt-2 text-sm text-muted">{e.meta}</p> : null}
+              {e.meta ? <p className="mt-2 text-sm" style={{ color: "var(--text-secondary)" }}>{e.meta}</p> : null}
             </motion.div>
           ))}
         </div>

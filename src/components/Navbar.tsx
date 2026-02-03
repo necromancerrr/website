@@ -4,12 +4,15 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import ThemeToggle from "./ThemeToggle";
+import { useTheme } from "./ThemeContext";
 
 // Floating, transparent navbar that overlays the hero with mobile full-screen menu
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const isCareerPortal = pathname?.startsWith('/career-portal');
+  const { theme } = useTheme();
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -23,18 +26,26 @@ export default function Navbar() {
     };
   }, [open]);
 
+  const logoSrc = theme === "light"
+    ? "/images/logo-light.png"
+    : "/images/transparent logo for website copy 2.png";
+
   return (
     <>
       {/* Desktop/Tablet Navbar */}
       <nav
-        className="sticky top-0 left-0 w-full z-50 flex items-center justify-between px-6 py-3 backdrop-blur-md bg-black/60 border-b border-white"
+        className="sticky top-0 left-0 w-full z-50 flex items-center justify-between px-6 py-3 backdrop-blur-md border-b"
+        style={{
+          backgroundColor: theme === "light" ? "rgba(248, 249, 250, 0.8)" : "rgba(0, 0, 0, 0.6)",
+          borderColor: "var(--border)",
+        }}
         aria-label="Primary"
       >
         {/* Brand Logo */}
         <div className="flex items-center">
           <Link href="/">
             <Image
-              src="/images/transparent logo for website copy 2.png"
+              src={logoSrc}
               alt="UW Blockchain Society logo"
               width={1200}
               height={300}
@@ -46,7 +57,7 @@ export default function Navbar() {
         </div>
 
         {/* Desktop Menu */}
-        <div className="hidden md:flex items-center gap-10 text-white font-medium">
+        <div className="hidden md:flex items-center gap-10 font-medium" style={{ color: "var(--text-primary)" }}>
           {!isCareerPortal && (
             <>
               <Link href="https://uwfintech.org/" target="_blank" className="hover:text-[rgb(183,148,244)]">Research</Link>
@@ -66,25 +77,33 @@ export default function Navbar() {
               </Link>
             </>
           )}
+          <ThemeToggle />
         </div>
 
         {/* Mobile Hamburger */}
-        <button
-          type="button"
-          aria-label="Open menu"
-          aria-expanded={open}
-          onClick={() => setOpen(true)}
-          className="md:hidden text-white"
-        >
-          <svg width="26" height="26" fill="none" stroke="white" strokeWidth="2" aria-hidden="true">
-            <path d="M4 6h18M4 13h18M4 20h18" />
-          </svg>
-        </button>
+        <div className="md:hidden flex items-center gap-4">
+          <ThemeToggle />
+          <button
+            type="button"
+            aria-label="Open menu"
+            aria-expanded={open}
+            onClick={() => setOpen(true)}
+            style={{ color: "var(--text-primary)" }}
+          >
+            <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M4 6h18M4 13h18M4 20h18" />
+            </svg>
+          </button>
+        </div>
       </nav>
 
       {/* Mobile Full-Screen Overlay Menu */}
       <div
-        className={`fixed inset-0 z-[60] bg-black flex flex-col items-center justify-center gap-10 text-white text-3xl font-semibold transition-opacity duration-300 ${open ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+        className={`fixed inset-0 z-[60] flex flex-col items-center justify-center gap-10 text-3xl font-semibold transition-opacity duration-300 ${open ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+        style={{
+          backgroundColor: "var(--background)",
+          color: "var(--text-primary)",
+        }}
         role="dialog"
         aria-modal="true"
         aria-hidden={!open}
@@ -94,9 +113,10 @@ export default function Navbar() {
           type="button"
           aria-label="Close menu"
           onClick={() => setOpen(false)}
-          className="absolute top-6 right-8 text-white"
+          className="absolute top-6 right-8"
+          style={{ color: "var(--text-primary)" }}
         >
-          <svg width="26" height="26" fill="none" stroke="white" strokeWidth="2" aria-hidden="true">
+          <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
             <path d="M6 6l14 14M20 6L6 20" />
           </svg>
         </button>
@@ -124,3 +144,4 @@ export default function Navbar() {
     </>
   );
 }
+
