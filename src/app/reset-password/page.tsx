@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
-import { supabase } from "@/lib/supabase-admin";
+import { supabaseBrowser } from "@/lib/supabase-browser";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Mail } from "lucide-react";
 
@@ -57,7 +57,7 @@ function ResetPasswordContent() {
     }
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(emailToSend, {
+      const { error } = await supabaseBrowser.auth.resetPasswordForEmail(emailToSend, {
         redirectTo: `${window.location.origin}/change-password`
       });
 

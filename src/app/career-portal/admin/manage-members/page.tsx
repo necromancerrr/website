@@ -2,7 +2,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase-admin";
+import { supabaseBrowser } from "@/lib/supabase-browser";
 import type { User, Session } from "@supabase/supabase-js";
 import { Plus, X, ArrowLeft, Search } from "lucide-react";
 
@@ -23,7 +23,7 @@ export default function ManageMembersPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  
+
   // Form states
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -44,15 +44,17 @@ export default function ManageMembersPage() {
   // Check for existing session and authorization
   useEffect(() => {
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+      } = await supabaseBrowser.auth.getSession();
+
       // Authorization check
       if (session?.user && session.user.email !== "blockchn@uw.edu") {
-        await supabase.auth.signOut();
+        await supabaseBrowser.auth.signOut();
         setError("Access denied. Unauthorized email address.");
         return;
       }
-      
+
       setSession(session);
       setUser(session?.user ?? null);
     };
@@ -60,22 +62,26 @@ export default function ManageMembersPage() {
     getSession();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        // Authorization check
-        if (event === 'SIGNED_IN' && session?.user && session.user.email !== "blockchn@uw.edu") {
-          await supabase.auth.signOut();
-          setError("Access denied. Unauthorized email address.");
-          return;
-        }
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (event === 'SIGNED_OUT') {
-          setError(null);
-        }
+    const {
+      data: { subscription },
+    } = supabaseBrowser.auth.onAuthStateChange(async (event, session) => {
+      // Authorization check
+      if (
+        event === "SIGNED_IN" &&
+        session?.user &&
+        session.user.email !== "blockchn@uw.edu"
+      ) {
+        await supabaseBrowser.auth.signOut();
+        setError("Access denied. Unauthorized email address.");
+        return;
       }
-    );
+
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (event === "SIGNED_OUT") {
+        setError(null);
+      }
+    });
 
     return () => subscription.unsubscribe();
   }, []);
@@ -89,21 +95,18 @@ export default function ManageMembersPage() {
 
   const fetchMembers = async () => {
     try {
-      const { data: MemberInformation, error } = await supabase
-        .from('members')
-        .select('*')
-        .not('id', 'is', null)
-        .order('created_at', { ascending: false });
+      const response = await fetch("/api/members");
+      const result = await response.json();
 
-      if (error) {
-        console.error('Error fetching members:', error);
-        setError('Failed to fetch members');
+      if (!response.ok) {
+        console.error("Error fetching members:", result.error);
+        setError("Failed to fetch members");
       } else {
-        setMembers(MemberInformation || []);
+        setMembers(result.data || []);
       }
     } catch (err) {
-      console.error('Error:', err);
-      setError('An unexpected error occurred');
+      console.error("Error:", err);
+      setError("An unexpected error occurred");
     }
   };
 
@@ -114,59 +117,44 @@ export default function ManageMembersPage() {
     setSuccess(null);
 
     try {
-      // Check if email already exists in members table
-      const { data: existingMember } = await supabase
-        .from('members')
-        .select('id')
-        .eq('email', memberEmail)
-        .single();
-
-      if (existingMember) {
-        setError('A member with this email already exists');
-        setLoading(false);
-        return;
-      }
-
       // Create user in auth system via API
-      const authResponse = await fetch('/api/admin/create-user', {
-        method: 'POST',
+      const inviteResponse = await fetch("/api/admin/invite", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          firstName: firstName,
-          lastName: lastName,
           email: memberEmail,
         }),
       });
-
-      const authData = await authResponse.json();
-
-      if (!authResponse.ok) {
-        setError(authData.error || 'Failed to create user in auth system');
+      if (!inviteResponse.ok) {
+        const inviteResult = await inviteResponse.json();
+        setError(inviteResult.error || "Failed to send invite");
         setLoading(false);
         return;
       }
+      // Add new member to database via API
+      const memberResponse = await fetch("/api/members/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          first_name: firstName,
+          last_name: lastName,
+          email: memberEmail,
+          wallet_address: walletAddress || null,
+        }),
+      });
 
-      // Add new member to database (keep existing logic)
-      const { data, error } = await supabase
-        .from('members')
-        .insert([
-          {
-            first_name: firstName,
-            last_name: lastName,
-            email: memberEmail,
-            wallet_address: walletAddress || null,
-            is_active: true
-          }
-        ])
-        .select()
-        .single();
+      const memberResult = await memberResponse.json();
 
-      if (error) {
-        setError(error.message);
+      if (!memberResponse.ok) {
+        setError(memberResult.error || "Failed to add member");
       } else {
-        setSuccess(`Successfully added ${firstName} ${lastName} to the career portal. A password reset email has been sent to ${memberEmail}.`);
+        setSuccess(
+          `Successfully added ${firstName} ${lastName} to the career portal. A password reset email has been sent to ${memberEmail}.`,
+        );
         // Reset form
         setFirstName("");
         setLastName("");
@@ -177,48 +165,56 @@ export default function ManageMembersPage() {
         fetchMembers();
       }
     } catch (err) {
-      setError('An unexpected error occurred');
+      setError("An unexpected error occurred");
     } finally {
       setLoading(false);
     }
   };
 
   const handleRemoveMember = async (memberId: string, memberName: string) => {
-    if (!confirm(`Are you sure you want to remove ${memberName} from the career portal?`)) {
+    if (
+      !confirm(
+        `Are you sure you want to remove ${memberName} from the career portal?`,
+      )
+    ) {
       return;
     }
 
     try {
-      const { error } = await supabase
-        .from('members')
-        .delete()
-        .eq('id', memberId);
+      const response = await fetch(`/api/members/${memberId}`, {
+        method: "DELETE",
+      });
 
-      if (error) {
-        setError(error.message);
+      if (!response.ok) {
+        const result = await response.json();
+        setError(result.error || "Failed to remove member");
       } else {
         setSuccess(`Successfully removed ${memberName} from the career portal`);
         fetchMembers();
       }
     } catch (err) {
-      setError('An unexpected error occurred');
+      setError("An unexpected error occurred");
     }
   };
 
   const handleToggleActive = async (memberId: string, isActive: boolean) => {
     try {
-      const { error } = await supabase
-        .from('members')
-        .update({ is_active: !isActive })
-        .eq('id', memberId);
+      const response = await fetch(`/api/members/${memberId}/toggle-active`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ is_active: !isActive }),
+      });
 
-      if (error) {
-        setError(error.message);
+      if (!response.ok) {
+        const result = await response.json();
+        setError(result.error || "Failed to update member status");
       } else {
         fetchMembers();
       }
     } catch (err) {
-      setError('An unexpected error occurred');
+      setError("An unexpected error occurred");
     }
   };
 
@@ -239,25 +235,29 @@ export default function ManageMembersPage() {
     setSuccess(null);
 
     try {
-      const { error } = await supabase
-        .from('members')
-        .update({
+      const response = await fetch(`/api/members/${editingMember.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           first_name: editFirstName,
           last_name: editLastName,
           email: editEmail,
           wallet_address: editWalletAddress || null,
-        })
-        .eq('id', editingMember.id);
+        }),
+      });
 
-      if (error) {
-        setError(error.message);
+      if (!response.ok) {
+        const result = await response.json();
+        setError(result.error || "Failed to update member");
       } else {
         setSuccess(`Successfully updated member information`);
         setEditingMember(null);
         fetchMembers();
       }
     } catch (err) {
-      setError('An unexpected error occurred');
+      setError("An unexpected error occurred");
     } finally {
       setLoading(false);
     }
@@ -273,7 +273,7 @@ export default function ManageMembersPage() {
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
+      await supabaseBrowser.auth.signOut();
     } catch (err) {
       console.error("Error signing out:", err);
     }
@@ -317,24 +317,36 @@ export default function ManageMembersPage() {
                 transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
                 className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-8 accent-glow"
               >
-                <form onSubmit={(e) => {
-                  e.preventDefault();
-                  const formData = new FormData(e.currentTarget);
-                  const email = formData.get('email') as string;
-                  const password = formData.get('password') as string;
-                  
-                  supabase.auth.signInWithPassword({ email, password })
-                    .then(({ data, error }) => {
-                      if (error) {
-                        setError(error.message);
-                      } else if (data.user && data.user.email !== "blockchn@uw.edu") {
-                        supabase.auth.signOut();
-                        setError("Access denied. Unauthorized email address.");
-                      }
-                    });
-                }} className="space-y-6">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.currentTarget);
+                    const email = formData.get("email") as string;
+                    const password = formData.get("password") as string;
+
+                    supabaseBrowser.auth
+                      .signInWithPassword({ email, password })
+                      .then(({ data, error }) => {
+                        if (error) {
+                          setError(error.message);
+                        } else if (
+                          data.user &&
+                          data.user.email !== "blockchn@uw.edu"
+                        ) {
+                          supabaseBrowser.auth.signOut();
+                          setError(
+                            "Access denied. Unauthorized email address.",
+                          );
+                        }
+                      });
+                  }}
+                  className="space-y-6"
+                >
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-medium text-white mb-2"
+                    >
                       Admin Email
                     </label>
                     <input
@@ -348,7 +360,10 @@ export default function ManageMembersPage() {
                   </div>
 
                   <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-white mb-2">
+                    <label
+                      htmlFor="password"
+                      className="block text-sm font-medium text-white mb-2"
+                    >
                       Admin Password
                     </label>
                     <input
@@ -365,7 +380,8 @@ export default function ManageMembersPage() {
                     type="submit"
                     className="w-full rounded-full text-white px-6 py-3 font-semibold transition-opacity hover:opacity-95"
                     style={{
-                      backgroundImage: "linear-gradient(117.96deg, #6f58da, #5131e7)",
+                      backgroundImage:
+                        "linear-gradient(117.96deg, #6f58da, #5131e7)",
                       boxShadow: "0 8px 24px rgba(111, 88, 218, 0.45)",
                     }}
                   >
@@ -418,7 +434,7 @@ export default function ManageMembersPage() {
                 whileTap={{ scale: 0.98 }}
                 className="group relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-medium overflow-hidden transition-all duration-300"
                 style={{
-                  background: showAddForm 
+                  background: showAddForm
                     ? "linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))"
                     : "linear-gradient(135deg, #7c3aed 0%, #6d28d9 50%, #5b21b6 100%)",
                   boxShadow: showAddForm
@@ -426,10 +442,11 @@ export default function ManageMembersPage() {
                     : "0 4px 20px rgba(124, 58, 237, 0.4), 0 0 0 1px rgba(124, 58, 237, 0.2)",
                 }}
               >
-                <span 
+                <span
                   className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                   style={{
-                    background: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%)",
+                    background:
+                      "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%)",
                   }}
                 />
                 <span className="relative z-10 flex items-center gap-2">
@@ -475,10 +492,18 @@ export default function ManageMembersPage() {
               transition={{ duration: 0.3, ease: "easeOut" }}
               className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-6 accent-glow mb-8"
             >
-              <h2 className="text-xl font-semibold text-white mb-4">Add New Member</h2>
-              <form onSubmit={handleAddMember} className="grid md:grid-cols-3 gap-4">
+              <h2 className="text-xl font-semibold text-white mb-4">
+                Add New Member
+              </h2>
+              <form
+                onSubmit={handleAddMember}
+                className="grid md:grid-cols-3 gap-4"
+              >
                 <div>
-                  <label htmlFor="firstName" className="block text-sm font-medium text-white mb-2">
+                  <label
+                    htmlFor="firstName"
+                    className="block text-sm font-medium text-white mb-2"
+                  >
                     First Name
                   </label>
                   <input
@@ -492,7 +517,10 @@ export default function ManageMembersPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="lastName" className="block text-sm font-medium text-white mb-2">
+                  <label
+                    htmlFor="lastName"
+                    className="block text-sm font-medium text-white mb-2"
+                  >
                     Last Name
                   </label>
                   <input
@@ -506,7 +534,10 @@ export default function ManageMembersPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="memberEmail" className="block text-sm font-medium text-white mb-2">
+                  <label
+                    htmlFor="memberEmail"
+                    className="block text-sm font-medium text-white mb-2"
+                  >
                     Email Address
                   </label>
                   <input
@@ -520,7 +551,10 @@ export default function ManageMembersPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="walletAddress" className="block text-sm font-medium text-white mb-2">
+                  <label
+                    htmlFor="walletAddress"
+                    className="block text-sm font-medium text-white mb-2"
+                  >
                     Wallet Address (Optional)
                   </label>
                   <input
@@ -551,7 +585,8 @@ export default function ManageMembersPage() {
                     disabled={loading}
                     className="px-6 py-2 rounded-lg text-white text-sm transition-opacity hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{
-                      backgroundImage: "linear-gradient(117.96deg, #6f58da, #5131e7)",
+                      backgroundImage:
+                        "linear-gradient(117.96deg, #6f58da, #5131e7)",
                       boxShadow: "0 4px 12px rgba(111, 88, 218, 0.35)",
                     }}
                   >
@@ -570,10 +605,18 @@ export default function ManageMembersPage() {
               transition={{ duration: 0.3, ease: "easeOut" }}
               className="bg-black/40 backdrop-blur-sm border border-electric/30 rounded-2xl p-6 accent-glow mb-8"
             >
-              <h2 className="text-xl font-semibold text-white mb-4">Edit Member</h2>
-              <form onSubmit={handleUpdateMember} className="grid md:grid-cols-3 gap-4">
+              <h2 className="text-xl font-semibold text-white mb-4">
+                Edit Member
+              </h2>
+              <form
+                onSubmit={handleUpdateMember}
+                className="grid md:grid-cols-3 gap-4"
+              >
                 <div>
-                  <label htmlFor="editFirstName" className="block text-sm font-medium text-white mb-2">
+                  <label
+                    htmlFor="editFirstName"
+                    className="block text-sm font-medium text-white mb-2"
+                  >
                     First Name
                   </label>
                   <input
@@ -587,7 +630,10 @@ export default function ManageMembersPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="editLastName" className="block text-sm font-medium text-white mb-2">
+                  <label
+                    htmlFor="editLastName"
+                    className="block text-sm font-medium text-white mb-2"
+                  >
                     Last Name
                   </label>
                   <input
@@ -601,7 +647,10 @@ export default function ManageMembersPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="editEmail" className="block text-sm font-medium text-white mb-2">
+                  <label
+                    htmlFor="editEmail"
+                    className="block text-sm font-medium text-white mb-2"
+                  >
                     Email Address
                   </label>
                   <input
@@ -615,7 +664,10 @@ export default function ManageMembersPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="editWalletAddress" className="block text-sm font-medium text-white mb-2">
+                  <label
+                    htmlFor="editWalletAddress"
+                    className="block text-sm font-medium text-white mb-2"
+                  >
                     Wallet Address (Optional)
                   </label>
                   <input
@@ -640,7 +692,8 @@ export default function ManageMembersPage() {
                     disabled={loading}
                     className="px-6 py-2 rounded-lg text-white text-sm transition-opacity hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{
-                      backgroundImage: "linear-gradient(117.96deg, #6f58da, #5131e7)",
+                      backgroundImage:
+                        "linear-gradient(117.96deg, #6f58da, #5131e7)",
                       boxShadow: "0 4px 12px rgba(111, 88, 218, 0.35)",
                     }}
                   >
@@ -678,88 +731,122 @@ export default function ManageMembersPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/10">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted">Name</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted">Email</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted">Wallet Address</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted">Status</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted">Date Added</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted">Actions</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted">
+                      Name
+                    </th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted">
+                      Email
+                    </th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted">
+                      Wallet Address
+                    </th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted">
+                      Status
+                    </th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted">
+                      Date Added
+                    </th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {members.filter(member => {
-                    const fullName = `${member.first_name} ${member.last_name}`.toLowerCase();
+                  {members.filter((member) => {
+                    const fullName =
+                      `${member.first_name} ${member.last_name}`.toLowerCase();
                     return fullName.includes(searchQuery.toLowerCase());
                   }).length === 0 ? (
                     <tr>
                       <td colSpan={6} className="text-center py-8 text-muted">
-                        {searchQuery ? "No members found matching your search." : "No members found."}
+                        {searchQuery
+                          ? "No members found matching your search."
+                          : "No members found."}
                       </td>
                     </tr>
                   ) : (
-                    members.filter(member => {
-                      const fullName = `${member.first_name} ${member.last_name}`.toLowerCase();
-                      return fullName.includes(searchQuery.toLowerCase());
-                    }).map((member) => (
-                      <tr key={member.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <td className="py-4 px-4">
-                          <div className="text-white font-medium">
-                            {member.first_name} {member.last_name}
-                          </div>
-                        </td>
-                        <td className="py-4 px-4 text-white">{member.email}</td>
-                        <td className="py-4 px-4 text-muted text-sm">
-                          {member.wallet_address ? (
-                            <span className="font-mono text-xs" title={member.wallet_address}>
-                              {member.wallet_address.slice(0, 6)}...{member.wallet_address.slice(-4)}
+                    members
+                      .filter((member) => {
+                        const fullName =
+                          `${member.first_name} ${member.last_name}`.toLowerCase();
+                        return fullName.includes(searchQuery.toLowerCase());
+                      })
+                      .map((member) => (
+                        <tr
+                          key={member.id}
+                          className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                        >
+                          <td className="py-4 px-4">
+                            <div className="text-white font-medium">
+                              {member.first_name} {member.last_name}
+                            </div>
+                          </td>
+                          <td className="py-4 px-4 text-white">
+                            {member.email}
+                          </td>
+                          <td className="py-4 px-4 text-muted text-sm">
+                            {member.wallet_address ? (
+                              <span
+                                className="font-mono text-xs"
+                                title={member.wallet_address}
+                              >
+                                {member.wallet_address.slice(0, 6)}...
+                                {member.wallet_address.slice(-4)}
+                              </span>
+                            ) : (
+                              <span className="text-white/40">—</span>
+                            )}
+                          </td>
+                          <td className="py-4 px-4">
+                            <span
+                              className={`px-3 py-1 rounded-full text-xs font-medium border ${member.is_active
+                                  ? "bg-green-400/10 border-green-400/20 text-green-400"
+                                  : "bg-yellow-400/10 border-yellow-400/20 text-yellow-400"
+                                }`}
+                            >
+                              {member.is_active ? "Active" : "Inactive"}
                             </span>
-                          ) : (
-                            <span className="text-white/40">—</span>
-                          )}
-                        </td>
-                        <td className="py-4 px-4">
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium border ${
-                            member.is_active 
-                              ? "bg-green-400/10 border-green-400/20 text-green-400"
-                              : "bg-yellow-400/10 border-yellow-400/20 text-yellow-400"
-                          }`}>
-                            {member.is_active ? "Active" : "Inactive"}
-                          </span>
-                        </td>
-                        <td className="py-4 px-4 text-muted text-sm">
-                          {new Date(member.created_at).toLocaleDateString()}
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => startEditMember(member)}
-                              className="text-electric hover:text-electric/80 text-sm transition-colors"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleToggleActive(member.id, member.is_active)}
-                              className={`text-sm transition-colors ${
-                                member.is_active 
-                                  ? "text-yellow-400 hover:text-yellow-300" 
-                                  : "text-green-400 hover:text-green-300"
-                              }`}
-                            >
-                              {member.is_active ? "Deactivate" : "Activate"}
-                            </button>
-                            <button
-                              onClick={() => handleRemoveMember(
-                                member.id, 
-                                `${member.first_name} ${member.last_name}`
-                              )}
-                              className="text-red-400 hover:text-red-300 text-sm transition-colors"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                          </td>
+                          <td className="py-4 px-4 text-muted text-sm">
+                            {new Date(member.created_at).toLocaleDateString()}
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => startEditMember(member)}
+                                className="text-electric hover:text-electric/80 text-sm transition-colors"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleToggleActive(
+                                    member.id,
+                                    member.is_active,
+                                  )
+                                }
+                                className={`text-sm transition-colors ${member.is_active
+                                    ? "text-yellow-400 hover:text-yellow-300"
+                                    : "text-green-400 hover:text-green-300"
+                                  }`}
+                              >
+                                {member.is_active ? "Deactivate" : "Activate"}
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleRemoveMember(
+                                    member.id,
+                                    `${member.first_name} ${member.last_name}`,
+                                  )
+                                }
+                                className="text-red-400 hover:text-red-300 text-sm transition-colors"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
                   )}
                 </tbody>
               </table>

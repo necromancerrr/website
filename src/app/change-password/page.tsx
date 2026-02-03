@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
-import { supabase } from "@/lib/supabase-admin";
+import { supabaseBrowser } from "@/lib/supabase-browser";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Lock, CheckCircle, AlertCircle } from "lucide-react";
 
@@ -23,7 +23,7 @@ function ChangePasswordContent() {
         setValidating(true);
         
         // Check if Supabase automatically detected and set the session from URL parameters
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabaseBrowser.auth.getSession();
         
         if (error) {
           console.error('Session validation error:', error);
@@ -78,7 +78,7 @@ function ChangePasswordContent() {
     }
 
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await supabaseBrowser.auth.getSession();
       
       if (sessionError) {
         setError(`Session error: ${sessionError.message}`);
@@ -93,7 +93,7 @@ function ChangePasswordContent() {
       }
       
       // Update the password
-      const { error } = await supabase.auth.updateUser({
+      const { error } = await supabaseBrowser.auth.updateUser({
         password: password,
       });
 

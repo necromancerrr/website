@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase-admin";
+import { supabaseBrowser } from "@/lib/supabase-browser";
 import { usePrivy } from "@privy-io/react-auth";
 import type { Session } from "@supabase/supabase-js";
 import type { Job, CareerField } from "@/types/career";
@@ -18,7 +18,7 @@ export default function JobsPage() {
     const getSession = async () => {
       const {
         data: { session },
-      } = await supabase.auth.getSession();
+      } = await supabaseBrowser.auth.getSession();
 
       setSession(session);
       setUser(session?.user ?? null);

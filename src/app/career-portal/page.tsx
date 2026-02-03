@@ -2,7 +2,7 @@
 import type { Session } from "@supabase/supabase-js";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase-admin";
+import { supabaseBrowser } from "@/lib/supabase-browser";
 import { usePrivy } from "@privy-io/react-auth";
 import { Briefcase, User, LogOut, ChevronRight, Wallet } from "lucide-react";
 
@@ -155,14 +155,11 @@ export default function CareerPortalPage() {
 
     // Fetch first_name from members table for welcome message
     try {
-      const { data: member } = await supabase
-        .from('members')
-        .select('first_name')
-        .eq('email', userEmail)
-        .maybeSingle();
+      const response = await fetch(`/api/members/first-name?email=${encodeURIComponent(userEmail)}`);
+      const result = await response.json();
 
-      if (member?.first_name) {
-        setMemberFirstName(member.first_name);
+      if (response.ok && result.first_name) {
+        setMemberFirstName(result.first_name);
       }
     } catch (memberErr) {
       console.error('Error fetching member first name:', memberErr);
@@ -173,7 +170,7 @@ export default function CareerPortalPage() {
     const getSession = async () => {
       const {
         data: { session },
-      } = await supabase.auth.getSession();
+      } = await supabaseBrowser.auth.getSession();
 
       setSession(session);
       setUser(session?.user ?? null);
@@ -187,7 +184,7 @@ export default function CareerPortalPage() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabaseBrowser.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
 
@@ -296,7 +293,7 @@ export default function CareerPortalPage() {
     }
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabaseBrowser.auth.signInWithPassword({
         email,
         password,
       });
@@ -318,7 +315,7 @@ export default function CareerPortalPage() {
   const handleSignOut = async () => {
     try {
       // Sign out from both Supabase and Privy
-      await supabase.auth.signOut();
+      await supabaseBrowser.auth.signOut();
       if (authenticated) {
         await privyLogout();
       }

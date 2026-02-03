@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
-import { supabase } from "@/lib/supabase-admin";
+import { supabaseBrowser } from "@/lib/supabase-browser";
 import { useRouter, useSearchParams } from "next/navigation";
 
 function UpdatePasswordContent() {
@@ -20,7 +20,7 @@ function UpdatePasswordContent() {
     const checkSession = async () => {
       try {
         // Check if Supabase automatically detected and set the session from URL
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabaseBrowser.auth.getSession();
         
         if (error) {
           console.error('Session check error:', error);
@@ -70,7 +70,7 @@ function UpdatePasswordContent() {
     }
 
     try {
-      const { error } = await supabase.auth.updateUser({
+      const { error } = await supabaseBrowser.auth.updateUser({
         password: password,
       });
 

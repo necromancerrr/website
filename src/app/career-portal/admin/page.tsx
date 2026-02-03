@@ -2,7 +2,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase-admin";
+import { supabaseBrowser } from "@/lib/supabase-browser";
 import type { Session, User } from "@supabase/supabase-js";
 
 interface DashboardStats {
@@ -30,10 +30,10 @@ export default function CareerPortalAdminPage() {
 
   useEffect(() => {
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await supabaseBrowser.auth.getSession();
       
       if (session?.user && session.user.email !== "blockchn@uw.edu") {
-        await supabase.auth.signOut();
+        await supabaseBrowser.auth.signOut();
         setError("Access denied. Unauthorized email address.");
         return;
       }
@@ -44,10 +44,10 @@ export default function CareerPortalAdminPage() {
 
     getSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    const { data: { subscription } } = supabaseBrowser.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_IN' && session?.user && session.user.email !== "blockchn@uw.edu") {
-          await supabase.auth.signOut();
+          await supabaseBrowser.auth.signOut();
           setError("Access denied. Unauthorized email address.");
           return;
         }
@@ -99,7 +99,7 @@ export default function CareerPortalAdminPage() {
     setError(null);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabaseBrowser.auth.signInWithPassword({
         email,
         password,
       });
@@ -107,7 +107,7 @@ export default function CareerPortalAdminPage() {
       if (error) {
         setError(error.message);
       } else if (data.user && data.user.email !== "blockchn@uw.edu") {
-        await supabase.auth.signOut();
+        await supabaseBrowser.auth.signOut();
         setError("Access denied. Unauthorized email address.");
       } else {
         setUser(data.user);
@@ -122,7 +122,7 @@ export default function CareerPortalAdminPage() {
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
+      await supabaseBrowser.auth.signOut();
     } catch (err) {
       console.error("Error signing out:", err);
     }

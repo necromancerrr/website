@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
-import { supabase } from "@/lib/supabase-admin";
+import { supabaseBrowser } from "@/lib/supabase-browser";
 import { useRouter, useSearchParams } from "next/navigation";
 
 function ResetPasswordContent() {
@@ -23,7 +23,7 @@ function ResetPasswordContent() {
     
     if (accessToken && refreshToken) {
       // Set up the session using the tokens from the email
-      supabase.auth.setSession({
+      supabaseBrowser.auth.setSession({
         access_token: accessToken,
         refresh_token: refreshToken,
       }).then(({ data, error }) => {
@@ -65,7 +65,7 @@ function ResetPasswordContent() {
     }
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabaseBrowser.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`
       });
 
@@ -102,7 +102,7 @@ function ResetPasswordContent() {
     }
 
     try {
-      const { error } = await supabase.auth.updateUser({
+      const { error } = await supabaseBrowser.auth.updateUser({
         password: password,
       });
 

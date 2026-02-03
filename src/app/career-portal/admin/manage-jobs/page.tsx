@@ -2,7 +2,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase-admin";
+import { supabaseBrowser } from "@/lib/supabase-browser";
 import { Plus, ArrowLeft, Search, ArrowUpDown } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
 import type { Job, CareerField } from "@/types/career";
@@ -45,11 +45,11 @@ export default function ManageJobsPage() {
     const getSession = async () => {
       const {
         data: { session },
-      } = await supabase.auth.getSession();
+      } = await supabaseBrowser.auth.getSession();
 
       // Authorization check for existing sessions
       if (session?.user && session.user.email !== "blockchn@uw.edu") {
-        await supabase.auth.signOut();
+        await supabaseBrowser.auth.signOut();
         setError("Access denied. Unauthorized email address.");
         return;
       }
@@ -63,14 +63,14 @@ export default function ManageJobsPage() {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabaseBrowser.auth.onAuthStateChange(async (event, session) => {
       // Authorization check for auth state changes
       if (
         event === "SIGNED_IN" &&
         session?.user &&
         session.user.email !== "blockchn@uw.edu"
       ) {
-        await supabase.auth.signOut();
+        await supabaseBrowser.auth.signOut();
         setError("Access denied. Unauthorized email address.");
         return;
       }
@@ -248,7 +248,7 @@ export default function ManageJobsPage() {
     setError(null);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabaseBrowser.auth.signInWithPassword({
         email,
         password,
       });
@@ -257,7 +257,7 @@ export default function ManageJobsPage() {
         setError(error.message);
       } else if (data.user && data.user.email !== "blockchn@uw.edu") {
         // Sign out immediately if not authorized email
-        await supabase.auth.signOut();
+        await supabaseBrowser.auth.signOut();
         setError("Access denied. Unauthorized email address.");
       } else {
         // Successful sign in with authorized email
@@ -273,7 +273,7 @@ export default function ManageJobsPage() {
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
+      await supabaseBrowser.auth.signOut();
     } catch (err) {
       console.error("Error signing out:", err);
     }
