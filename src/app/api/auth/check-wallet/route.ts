@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/api/supabase-server'
+import { supabase } from '@/lib/supabase-admin'
 
 export async function POST(request: Request) {
   try {
@@ -18,12 +18,12 @@ export async function POST(request: Request) {
 
     console.log('API: Checking wallet authorization for:', walletAddress)
 
-    if (!supabaseAdmin) {
+    if (!supabase) {
       console.error('Supabase admin client not initialized')
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
     }
 
-    const { data: member, error } = await supabaseAdmin
+    const { data: member, error } = await supabase
       .from('members')
       .select('id, wallet_address, is_active, email, first_name, last_name')
       .ilike('wallet_address', walletAddress.toLowerCase())

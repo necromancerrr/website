@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/api/supabase";
+import { supabase } from "@/lib/supabase-admin";
 import { usePrivy } from "@privy-io/react-auth";
 import type { Session } from "@supabase/supabase-js";
 import type { Job, CareerField } from "@/types/career";

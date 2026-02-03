@@ -2,7 +2,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { supabase } from "@/api/supabase";
+import { supabase } from "@/lib/supabase-admin";
 import type { Session, User } from "@supabase/supabase-js";
 
 interface DashboardStats {
