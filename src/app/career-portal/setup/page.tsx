@@ -74,8 +74,8 @@ export default function SetupPage() {
         return;
       }
 
-      // Success - redirect to career portal
-      router.push('/career-portal?setup=success');
+      // Success - redirect to homepage to sign in
+      router.push('/career-portal/');
     } catch (err) {
       setError('Something went wrong');
     } finally {
