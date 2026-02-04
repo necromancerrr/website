@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Lock, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
-export default function SetupPage() {
+function SetupPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get('token');
@@ -199,5 +199,22 @@ export default function SetupPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function SetupPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen pt-24 px-4">
+        <div className="max-w-md mx-auto">
+          <div className="text-center py-20">
+            <Loader2 className="w-6 h-6 animate-spin text-violet-500 mx-auto mb-3" />
+            <p className="text-sm text-zinc-500">Loading...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <SetupPageContent />
+    </Suspense>
   );
 }
