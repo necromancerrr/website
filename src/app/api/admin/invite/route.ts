@@ -63,8 +63,7 @@ export async function POST(request: NextRequest) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "invites@uwblockchain.org",
-        reply_to: "blockchn@uw.edu",
+        from: "UW Blockchain: Career Portal Invite <noreply@uwblockchain.org>",
         to: email,
         subject: "UW Blockchain: You've been invited to join UW Career Portal",
         html: `

@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
-import { supabaseBrowser } from "@/lib/supabase-browser";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Mail } from "lucide-react";
 
@@ -57,12 +56,16 @@ function ResetPasswordContent() {
     }
 
     try {
-      const { error } = await supabaseBrowser.auth.resetPasswordForEmail(emailToSend, {
-        redirectTo: `${window.location.origin}/change-password`
+      const response = await fetch('/api/admin/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailToSend })
       });
 
-      if (error) {
-        setError(error.message);
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || 'Failed to send reset link');
       } else {
         setSuccess(`Password reset link sent to ${emailToSend}. Please check your email and click the link to set your password.`);
         // Store the email that was sent to and clear the input field if not resending
