@@ -427,7 +427,7 @@ export default function CareerPortalPage() {
             <div className="mt-4 text-center">
               <button
                 type="button"
-                onClick={() => router.push("/reset-password")}
+                onClick={() => router.push("/career-portal/reset-password")}
                 className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
               >
                 Forgot password?
