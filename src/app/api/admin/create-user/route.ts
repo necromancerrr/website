@@ -1,17 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-
-// Create admin client with service role key for admin operations
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-    detectSessionInUrl: false,
-  },
-})
+import { supabase } from '@/lib/supabase-admin'
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already exists in auth system
-    const { data: existingUser, error: userCheckError } = await supabaseAdmin.auth.admin.listUsers()
+    const { data: existingUser, error: userCheckError } = await supabase.auth.admin.listUsers()
     
     if (userCheckError) {
       console.error('Error checking existing users:', userCheckError)
@@ -54,7 +42,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new user in auth system without password
-    const { data: authUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+    const { data: authUser, error: createError } = await supabase.auth.admin.createUser({
       email: email,
       email_confirm: true, // Auto-confirm email since admin is adding them
       user_metadata: {
@@ -73,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Trigger password reset email for the new user
-    const { error: resetError } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL}/reset-password`
     })
 

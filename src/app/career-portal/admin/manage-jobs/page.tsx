@@ -2,7 +2,8 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { supabase } from "@/api/supabase";
+import { supabaseBrowser } from "@/lib/supabase-browser";
+import { Plus, ArrowLeft, Search, ArrowUpDown } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
 import type { Job, CareerField } from "@/types/career";
 import { CAREER_FIELD_OPTIONS, CAREER_FIELD_LABELS } from "@/types/career";
@@ -31,6 +32,10 @@ export default function ManageJobsPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
 
+  // Search and sort state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
+
   const stats = {
     total: jobs.length,
   };
@@ -40,11 +45,11 @@ export default function ManageJobsPage() {
     const getSession = async () => {
       const {
         data: { session },
-      } = await supabase.auth.getSession();
+      } = await supabaseBrowser.auth.getSession();
 
       // Authorization check for existing sessions
       if (session?.user && session.user.email !== "blockchn@uw.edu") {
-        await supabase.auth.signOut();
+        await supabaseBrowser.auth.signOut();
         setError("Access denied. Unauthorized email address.");
         return;
       }
@@ -58,14 +63,14 @@ export default function ManageJobsPage() {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabaseBrowser.auth.onAuthStateChange(async (event, session) => {
       // Authorization check for auth state changes
       if (
         event === "SIGNED_IN" &&
         session?.user &&
         session.user.email !== "blockchn@uw.edu"
       ) {
-        await supabase.auth.signOut();
+        await supabaseBrowser.auth.signOut();
         setError("Access denied. Unauthorized email address.");
         return;
       }
@@ -119,6 +124,9 @@ export default function ManageJobsPage() {
     e.preventDefault();
     setFormError(null);
     setFormLoading(true);
+
+    console.log('Creating job with data:', formData);
+    console.log('Referral available value:', formData.referral_available, 'Type:', typeof formData.referral_available);
 
     try {
       const response = await fetch("/api/jobs", {
@@ -240,7 +248,7 @@ export default function ManageJobsPage() {
     setError(null);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabaseBrowser.auth.signInWithPassword({
         email,
         password,
       });
@@ -249,7 +257,7 @@ export default function ManageJobsPage() {
         setError(error.message);
       } else if (data.user && data.user.email !== "blockchn@uw.edu") {
         // Sign out immediately if not authorized email
-        await supabase.auth.signOut();
+        await supabaseBrowser.auth.signOut();
         setError("Access denied. Unauthorized email address.");
       } else {
         // Successful sign in with authorized email
@@ -265,7 +273,7 @@ export default function ManageJobsPage() {
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
+      await supabaseBrowser.auth.signOut();
     } catch (err) {
       console.error("Error signing out:", err);
     }
@@ -439,15 +447,38 @@ export default function ManageJobsPage() {
             <div className="flex gap-2">
               <Link
                 href="/career-portal/admin"
-                className="px-4 py-2 rounded-lg text-white text-sm transition-opacity hover:opacity-95"
+                className="group flex items-center gap-1.5 px-3 py-2 text-muted hover:text-white text-sm transition-all duration-200 rounded-lg hover:bg-white/5"
+              >
+                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform duration-200" />
+                <span>Back</span>
+              </Link>
+              <motion.button
+                onClick={() => setShowCreateModal(true)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="group relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-medium overflow-hidden transition-all duration-300"
                 style={{
-                  backgroundImage:
-                    "linear-gradient(117.96deg, #6f58da, #5131e7)",
-                  boxShadow: "0 4px 12px rgba(111, 88, 218, 0.35)",
+                  background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 50%, #5b21b6 100%)",
+                  boxShadow: "0 4px 20px rgba(124, 58, 237, 0.4), 0 0 0 1px rgba(124, 58, 237, 0.2)",
                 }}
               >
-                Back to Admin
-              </Link>
+                <span 
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{
+                    background: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%)",
+                  }}
+                />
+                <span className="relative z-10 flex items-center gap-2">
+                  <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" />
+                  Add Job
+                </span>
+              </motion.button>
+              <button
+                onClick={fetchJobs}
+                className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-colors text-sm"
+              >
+                Refresh
+              </button>
               <button
                 onClick={handleSignOut}
                 className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-colors text-sm"
@@ -456,34 +487,6 @@ export default function ManageJobsPage() {
               </button>
             </div>
           </div>
-
-          {/* Quick Actions */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-            className="mb-8"
-          >
-            <div className="flex gap-4">
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="rounded-full text-white px-6 py-3 font-semibold transition-opacity hover:opacity-95"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(117.96deg, #6f58da, #5131e7)",
-                  boxShadow: "0 8px 24px rgba(111, 88, 218, 0.45)",
-                }}
-              >
-                Create New Job Posting
-              </button>
-              <button
-                onClick={fetchJobs}
-                className="px-6 py-3 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-colors font-semibold"
-              >
-                Refresh
-              </button>
-            </div>
-          </motion.div>
 
           {/* Stats */}
           <motion.div
@@ -505,7 +508,10 @@ export default function ManageJobsPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-              onClick={() => setShowCreateModal(false)}
+              onClick={() => {
+                setShowCreateModal(false);
+                resetForm();
+              }}
             >
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -520,7 +526,10 @@ export default function ManageJobsPage() {
                     Create Job Posting
                   </h2>
                   <button
-                    onClick={() => setShowCreateModal(false)}
+                    onClick={() => {
+                      setShowCreateModal(false);
+                      resetForm();
+                    }}
                     className="text-muted hover:text-white transition-colors"
                   >
                     <svg
@@ -706,7 +715,11 @@ export default function ManageJobsPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setShowCreateModal(false)}
+                      onClick={() => {
+                        setShowCreateModal(false);
+                        resetForm();
+                        setFormError(null);
+                      }}
                       className="px-6 py-3 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-colors"
                     >
                       Cancel
@@ -724,7 +737,11 @@ export default function ManageJobsPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-              onClick={() => setEditingJob(null)}
+              onClick={() => {
+              setEditingJob(null);
+              resetForm();
+              setFormError(null);
+            }}
             >
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -739,7 +756,11 @@ export default function ManageJobsPage() {
                     Edit Job Posting
                   </h2>
                   <button
-                    onClick={() => setEditingJob(null)}
+                    onClick={() => {
+              setEditingJob(null);
+              resetForm();
+              setFormError(null);
+            }}
                     className="text-muted hover:text-white transition-colors"
                   >
                     <svg
@@ -873,23 +894,23 @@ export default function ManageJobsPage() {
                      </div>
                    </div>
 
-                   <div className="flex items-center gap-2">
-                     <input
-                       type="checkbox"
-                       id="edit_referral_available"
-                       checked={formData.referral_available}
-                       onChange={(e) =>
-                         setFormData({ ...formData, referral_available: e.target.checked })
-                       }
-                       className="w-4 h-4 bg-white/5 border border-white/10 rounded focus:ring-electric focus:border-electric"
-                     />
-                     <label
-                       htmlFor="edit_referral_available"
-                       className="text-sm font-medium text-white cursor-pointer"
-                     >
-                       Referral Available
-                     </label>
-                   </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="edit_referral_available"
+                        checked={formData.referral_available}
+                        onChange={(e) => {
+                          setFormData({ ...formData, referral_available: e.target.checked });
+                        }}
+                        className="w-4 h-4 bg-white/5 border border-white/10 rounded focus:ring-electric focus:border-electric"
+                      />
+                      <label
+                        htmlFor="edit_referral_available"
+                        className="text-sm font-medium text-white cursor-pointer"
+                      >
+                        Referral Available
+                      </label>
+                    </div>
 
                    <div>
                      <label
@@ -925,7 +946,11 @@ export default function ManageJobsPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setEditingJob(null)}
+                      onClick={() => {
+              setEditingJob(null);
+              resetForm();
+              setFormError(null);
+            }}
                       className="px-6 py-3 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-colors"
                     >
                       Cancel
@@ -937,92 +962,141 @@ export default function ManageJobsPage() {
           )}
 
           {/* Jobs List */}
-          {jobs.length > 0 ? (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
-              className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-6 accent-glow"
-            >
-              <h2 className="text-xl font-semibold text-white mb-6">
-                Current Job Postings ({jobs.length})
-              </h2>
-              <div className="space-y-4">
-                {jobs.map((job) => (
-                  <div
-                    key={job.id}
-                    className="bg-white/5 border border-white/10 rounded-lg p-4 hover:bg-white/10 transition-colors"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="text-white font-semibold mb-1">
-                          {job.position || "Untitled Position"}
-                        </h3>
-                        <p className="text-muted mb-2">{job.company || "Unknown Company"}</p>
-                        <a
-                          href={job.job_posting_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-electric hover:opacity-80 text-sm transition-opacity"
-                        >
-                          View Job Posting →
-                        </a>
-                        {job.experience_level && (
-                          <span className="ml-4 px-2 py-1 bg-white/10 rounded text-xs text-muted">
-                            {job.experience_level}
-                          </span>
-                        )}
-                        {job.career_fields && job.career_fields.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {job.career_fields.map((field) => (
-                              <span
-                                key={field}
-                                className="px-2 py-0.5 bg-electric/20 text-electric text-xs rounded-full"
-                              >
-                                {CAREER_FIELD_LABELS[field]}
+          {(() => {
+            const filteredJobs = jobs.filter(job => {
+              const company = (job.company || "").toLowerCase();
+              const position = (job.position || "").toLowerCase();
+              const query = searchQuery.toLowerCase();
+              return company.includes(query) || position.includes(query);
+            }).sort((a, b) => {
+              const dateA = new Date(a.created_at).getTime();
+              const dateB = new Date(b.created_at).getTime();
+              return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+            });
+
+            if (jobs.length === 0) {
+              return (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+                  className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-12 accent-glow text-center"
+                >
+                  <p className="text-muted text-lg mb-2">No job postings yet</p>
+                  <p className="text-sm text-muted">Create your first job posting to get started.</p>
+                </motion.div>
+              );
+            }
+
+            return (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+                className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-6 accent-glow"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                  <h2 className="text-xl font-semibold text-white">
+                    Current Job Postings ({filteredJobs.length})
+                  </h2>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+                      <input
+                        type="text"
+                        placeholder="Search company or position..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full sm:w-64 pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-muted focus:outline-none focus:border-electric focus:ring-1 focus:ring-electric transition-colors text-sm"
+                      />
+                    </div>
+                    <button
+                      onClick={() => setSortOrder(sortOrder === "newest" ? "oldest" : "newest")}
+                      className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-colors text-sm"
+                    >
+                      <ArrowUpDown className="w-4 h-4" />
+                      {sortOrder === "newest" ? "Newest Posted Date" : "Oldest Posted Date"}
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  {filteredJobs.length === 0 ? (
+                    <div className="text-center py-8 text-muted">
+                      {searchQuery ? "No jobs found matching your search." : "No jobs found."}
+                    </div>
+                  ) : (
+                    filteredJobs.map((job) => (
+                      <div
+                        key={job.id}
+                        className="bg-white/5 border border-white/10 rounded-lg p-4 hover:bg-white/10 transition-colors"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h3 className="text-white font-semibold mb-1">
+                              {job.position || "Untitled Position"}
+                            </h3>
+                            <p className="text-muted mb-2">{job.company || "Unknown Company"}</p>
+                            <a
+                              href={job.job_posting_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-electric hover:opacity-80 text-sm transition-opacity"
+                            >
+                              View Job Posting →
+                            </a>
+                            {job.experience_level && (
+                              <span className="ml-4 px-2 py-1 bg-white/10 rounded text-xs text-muted">
+                                {job.experience_level}
                               </span>
-                            ))}
+                            )}
+                            {job.referral_available && (
+                              <span className="ml-2 px-2 py-1 bg-green-500/20 border border-green-500/30 rounded text-xs text-green-400 font-medium">
+                                Referral Available
+                              </span>
+                            )}
+                            {job.career_fields && job.career_fields.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {job.career_fields.map((field) => (
+                                  <span
+                                    key={field}
+                                    className="px-2 py-0.5 bg-electric/20 text-electric text-xs rounded-full"
+                                  >
+                                    {CAREER_FIELD_LABELS[field]}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 ml-4">
+                            <button
+                              onClick={() => startEditJob(job)}
+                              className="px-3 py-1 bg-electric/10 border border-electric/20 text-electric rounded hover:bg-electric/20 transition-colors text-sm"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteJob(job.id)}
+                              className="px-3 py-1 bg-red-500/10 border border-red-500/20 text-red-400 rounded hover:bg-red-500/20 transition-colors text-sm"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                        {job.notes && (
+                          <div className="mt-2 text-sm text-muted bg-white/5 rounded p-2">
+                            <strong>Note:</strong> {job.notes}
                           </div>
                         )}
+                        <div className="mt-3 text-xs text-muted">
+                          Posted {new Date(job.created_at).toLocaleDateString()}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 ml-4">
-                        <button
-                          onClick={() => startEditJob(job)}
-                          className="px-3 py-1 bg-electric/10 border border-electric/20 text-electric rounded hover:bg-electric/20 transition-colors text-sm"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteJob(job.id)}
-                          className="px-3 py-1 bg-red-500/10 border border-red-500/20 text-red-400 rounded hover:bg-red-500/20 transition-colors text-sm"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                    {job.notes && (
-                      <div className="mt-2 text-sm text-muted bg-white/5 rounded p-2">
-                        <strong>Note:</strong> {job.notes}
-                      </div>
-                    )}
-                    <div className="mt-3 text-xs text-muted">
-                      Posted {new Date(job.created_at).toLocaleDateString()}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
-              className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-2xl p-12 accent-glow text-center"
-            >
-              <p className="text-muted text-lg mb-2">No job postings yet</p>
-              <p className="text-sm text-muted">Create your first job posting to get started.</p>
-            </motion.div>
-          )}
+                    ))
+                  )}
+                </div>
+              </motion.div>
+            );
+          })()}
         </motion.div>
       </div>
     </div>

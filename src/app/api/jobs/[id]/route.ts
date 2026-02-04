@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import type { CareerField } from '@/types/career';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { supabase } from '@/lib/supabase-admin';
 
 export async function PUT(
   request: NextRequest,
@@ -36,6 +31,7 @@ export async function PUT(
       experience_level,
       notes,
       career_fields,
+      referral_available,
     } = body as {
       company?: string;
       position?: string;
@@ -43,6 +39,7 @@ export async function PUT(
       experience_level?: string;
       notes?: string;
       career_fields?: CareerField[];
+      referral_available?: boolean;
     };
 
     if (!job_posting_url) {
@@ -68,6 +65,7 @@ export async function PUT(
       experience_level: experience_level?.trim() || null,
       notes: notes?.trim() || null,
       career_fields: career_fields || null,
+      referral_available: referral_available === true,
       last_updated: new Date().toISOString(),
     };
     console.log('PUT: Update data:', JSON.stringify(updateData, null, 2));

@@ -20,6 +20,9 @@
 # production
 /build
 
+# agent
+.opencode/
+
 # misc
 .DS_Store
 *.pem
